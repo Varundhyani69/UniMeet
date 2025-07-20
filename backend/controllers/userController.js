@@ -54,32 +54,38 @@ export const login = async (req, res) => {
         if (!username || !password) {
             return res.status(400).json({ success: false, message: "Something is missing" });
         }
-        const checkuser = await User.findOne({ username });
-        if (!checkuser) {
+
+        const user = await User.findOne({ username }).select('+password');
+        if (!user) {
             return res.status(400).json({ success: false, message: "User not registered" });
         }
-        const checkPass = await bcrypt.compare(password, checkuser.password);
+
+        const checkPass = await bcrypt.compare(password, user.password);
         if (!checkPass) {
             return res.status(400).json({ success: false, message: "Wrong Password" });
         }
 
-        const token = jwt.sign({ id: checkuser._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-        const user = await User.findOne({ username }).select('-password -otp -otp_expiry -verified -pendingRequest -createdAt -updatedAt');
-        return res.cookie('token', token, {
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+        const cleanUser = await User.findById(user._id).select('-password -otp -otp_expiry -verified -pendingRequest -createdAt -updatedAt');
+
+        res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         }).json({
             success: true,
-            message: `Welcome back ${checkuser.username}`,
-            user
+            message: `Welcome back ${user.username}`,
+            user: cleanUser
         });
+
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ success: false, message: "Login error" });
     }
-}
+};
+
 
 export const getUserDetails = async (req, res) => {
     try {
