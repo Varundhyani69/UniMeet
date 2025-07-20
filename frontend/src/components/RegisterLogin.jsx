@@ -8,7 +8,7 @@ const RegisterLogin = () => {
 
     useEffect(() => {
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/me`, { withCredentials: true })
-            .then(() => navigate('/Dashboard'))
+            .then(() => navigate('/dashboard'))
             .catch(() => { });
     }, []);
 
@@ -51,7 +51,7 @@ const RegisterLogin = () => {
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/login`, loginDetails, { withCredentials: true });
             if (res.status === 200) {
-                navigate('/Dashboard');
+                navigate('/dashboard');
             }
 
         } catch (error) {
