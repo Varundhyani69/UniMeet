@@ -2,19 +2,19 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+// https://vite.dev/config/
 export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://unimeet-i1j9.onrender.com',
+        target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },
   optimizeDeps: {
     include: ['pdfjs-dist']
   },
-  plugins: [react(), tailwindcss()]
-})
-
+  plugins: [react(), tailwindcss()],
+});

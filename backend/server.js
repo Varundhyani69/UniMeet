@@ -38,9 +38,7 @@ app.use('/api/user', userRoute);
 app.use('/api/message', messageRoutes);
 app.use('/api/timetable', timetableRoutes);
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+
 
 app.get('/', (req, res) => {
     res.send("Backend is running");
