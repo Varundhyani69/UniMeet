@@ -46,7 +46,9 @@ app.use('/api/timetable', timetableRoutes);
 
 const frontendPath = path.join(__dirname, 'frontend', 'dist');
 app.use(express.static(frontendPath));
-
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
 app.listen(PORT, () => {
     console.log("Server is listening on port " + PORT);
 });
