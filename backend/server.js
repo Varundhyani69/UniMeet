@@ -15,7 +15,6 @@ const PORT = process.env.PORT;
 mongoose.connect(process.env.MONGO_URI).then(() => { console.log("DB connected") }).catch((err) => { console.log(err) });
 const allowedOrigins = [
     'http://localhost:5173',
-    'https://uni-meet-eta.vercel.app',
     'https://unimeet-frontend.onrender.com'
 ];
 app.use(cookieParser());
