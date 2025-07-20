@@ -14,7 +14,7 @@ const Friends = ({ userData }) => {
 
     const fetchFriendData = async () => {
         try {
-            const res = await axios.get('/api/user/getFriends', {
+            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/getFriends`, {
                 withCredentials: true
             });
 
@@ -93,7 +93,7 @@ const Friends = ({ userData }) => {
     }, [friendData, userData]);
     const sendReminder = async (friendId) => {
         try {
-            const res = await axios.post(`/api/user/sendReminder/${friendId}`, {}, {
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendReminder/${friendId}`, {}, {
                 withCredentials: true
             });
 

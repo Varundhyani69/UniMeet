@@ -10,7 +10,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const navigate = useNavigate();
     const timetableFileInputRef = useRef(null);
 
-    // Local state for profile data (editable fields)
     const [updateData, setUpdateData] = useState({});
 
 
@@ -59,7 +58,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const logout = async () => {
         try {
             const res = await axios.post(
-                '/api/user/logout',
+                `${import.meta.env.VITE_API_BASE_URL}/api/user/logout`,
                 {},
                 { withCredentials: true }
             );
@@ -78,7 +77,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const handleSubmitProfile = async () => {
         try {
             const res = await axios.post(
-                '/api/user/editProfile',
+                `${import.meta.env.VITE_API_BASE_URL}/api/user/editProfile`,
                 updateData,
                 { withCredentials: true }
             );
@@ -99,7 +98,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const displayDate = initialUserData.dob ? new Date(initialUserData.dob).toISOString().split('T')[0] : '00-00-00';
     const deleteHandler = async () => {
         try {
-            const res = await axios.delete('/api/user/deleteUser', { withCredentials: true })
+            const res = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/user/deleteUser`, { withCredentials: true })
             if (res.status === 200) {
                 navigate('/');
                 console.log("Account deleted");
@@ -113,7 +112,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const sendOtp = async () => {
         try {
             const res = await axios.post(
-                '/api/user/sendChangePasswordOtp',
+                `${import.meta.env.VITE_API_BASE_URL}/api/user/sendChangePasswordOtp`,
                 {},
                 { withCredentials: true }
             );
@@ -129,7 +128,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const verifyOtp = async () => {
         try {
             const res = await axios.post(
-                '/api/user/verifyChangePasswordOtp',
+                `${import.meta.env.VITE_API_BASE_URL}/api/user/verifyChangePasswordOtp`,
                 { otp },
                 { withCredentials: true }
             );
@@ -145,7 +144,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const changePasswordSubmit = async () => {
         try {
             const res = await axios.post(
-                '/api/user/changePassword',
+                `${import.meta.env.VITE_API_BASE_URL}/api/user/changePassword`,
                 { newPassword },
                 { withCredentials: true }
             );
@@ -167,7 +166,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const sendEmailOtp = async () => {
         try {
-            const res = await axios.post('/api/user/sendChangePasswordOtp', {}, { withCredentials: true });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendChangePasswordOtp`, {}, { withCredentials: true });
             if (res.status === 200) {
                 setOtpSent(true);
                 setOtpError('');
@@ -179,7 +178,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const verifyEmailOtp = async () => {
         try {
-            const res = await axios.post('/api/user/verifyChangePasswordOtp', { otp }, { withCredentials: true });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/verifyChangePasswordOtp`, { otp }, { withCredentials: true });
             if (res.status === 200) {
                 setOtpVerified(true);
                 setOtpError('');
@@ -191,7 +190,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const sendOtpToNewEmail = async () => {
         try {
-            const res = await axios.post('http://localhost:8080/api/user/sendVerificationNewEmail', { email: newEmail }, { withCredentials: true });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendVerificationNewEmail`, { email: newEmail }, { withCredentials: true });
             if (res.status === 200) setEmailOtpSent(true);
         } catch (err) {
             console.log(err.response?.data || err.message);
@@ -200,7 +199,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const verifyNewEmailOtp = async () => {
         try {
-            const res = await axios.post('/api/user/verifyNewEmail', { email: newEmail, otp: emailOtp }, { withCredentials: true });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/verifyNewEmail`, { email: newEmail, otp: emailOtp }, { withCredentials: true });
             if (res.status === 200) {
                 setEmailSuccess(true);
                 setEmailBox(false);
@@ -219,7 +218,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         formData.append('timetable', file);
 
         try {
-            const res = await axios.post('/api/timetable/upload-timetable',
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/timetable/upload-timetable`,
                 formData,
                 {
                     withCredentials: true,
@@ -298,7 +297,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             }
 
             const res = await axios.post(
-                '/api/timetable/editTimetable',
+                `${import.meta.env.VITE_API_BASE_URL}/api/timetable/editTimetable`,
                 { timetable: updatedTimetable },
                 { withCredentials: true }
             );
@@ -381,7 +380,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         formData.append("pfp", selectedFile);
 
         try {
-            const res = await axios.post('/api/user/uploadPfp', formData, {
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/uploadPfp`, formData, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'multipart/form-data'

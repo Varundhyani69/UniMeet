@@ -10,7 +10,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const res = await axios.get('/api/user/getUserDetails', { withCredentials: true })
+                const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/getUserDetails`, { withCredentials: true })
                 if (res.data.success) {
                     setUserData(res.data.user);
                 }
