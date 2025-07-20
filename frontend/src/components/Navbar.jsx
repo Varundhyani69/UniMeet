@@ -19,7 +19,7 @@ const Navbar = ({ userData }) => {
         if (value.trim().length === 0) return setSearchResults([]);
 
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/user/search?query=${value}`, { withCredentials: true });
+            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/search?query=${value}`, { withCredentials: true });
             setSearchResults(res.data.users);
         } catch (err) {
             console.error("Search error:", err.message);
