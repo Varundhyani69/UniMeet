@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://unimeet-i1j9.onrender.com',
         changeOrigin: true,
         secure: false,
       },
