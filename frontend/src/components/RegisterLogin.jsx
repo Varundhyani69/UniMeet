@@ -8,7 +8,7 @@ const RegisterLogin = () => {
 
     useEffect(() => {
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/me`, { withCredentials: true })
-            .then(() => navigate('/dashboard'))
+            .then(() => navigate('/Dashboard'))
             .catch(() => { });
     }, []);
 
