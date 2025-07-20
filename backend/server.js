@@ -13,10 +13,13 @@ const app = express();
 const PORT = process.env.PORT;
 
 mongoose.connect(process.env.MONGO_URI).then(() => { console.log("DB connected") }).catch((err) => { console.log(err) });
-
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://uni-meet-eta.vercel.app'
+];
 app.use(cookieParser());
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(express.json());
