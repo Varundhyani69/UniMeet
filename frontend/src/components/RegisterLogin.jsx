@@ -51,7 +51,7 @@ const RegisterLogin = () => {
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/login`, loginDetails, { withCredentials: true });
             if (res.status === 200) {
-                navigate('/dashboard');
+                navigate('/Dashboard');
             }
 
         } catch (error) {
