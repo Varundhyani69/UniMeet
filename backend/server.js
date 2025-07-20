@@ -2,10 +2,16 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import userRoute from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import timetableRoutes from "./routes/timetableRoutes.js";
 import cookieParser from "cookie-parser";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -38,11 +44,8 @@ app.use('/api/user', userRoute);
 app.use('/api/message', messageRoutes);
 app.use('/api/timetable', timetableRoutes);
 
-
-
-app.get('/', (req, res) => {
-    res.send("Backend is running");
-});
+const frontendPath = path.join(__dirname, 'frontend', 'dist');
+app.use(express.static(frontendPath));
 
 app.listen(PORT, () => {
     console.log("Server is listening on port " + PORT);

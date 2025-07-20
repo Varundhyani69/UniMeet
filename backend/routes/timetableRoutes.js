@@ -102,9 +102,10 @@ router.post("/editTimetable", isAuthenticated, async (req, res) => {
         await user.save();
         res.status(200).json({ success: true, timetable });
     } catch (error) {
-        console.error("Timetable update failed:", err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error("Timetable update failed:", error); // ✅ Correct variable
+        res.status(500).json({ success: false, error: error.message }); // ✅
     }
+
 })
 
 export default router;
