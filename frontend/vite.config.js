@@ -8,7 +8,7 @@ export default defineConfig({
       '/api': {
         target: 'https://unimeet-i1j9.onrender.com',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
     },
   },
