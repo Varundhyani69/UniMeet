@@ -17,7 +17,7 @@ const ChatPage = ({ userData }) => {
     useEffect(() => {
         const fetchFriends = async () => {
             try {
-                const res = await axios.get('http://localhost:8080/api/user/getFriends', {
+                const res = await axios.get('/api/user/getFriends', {
                     withCredentials: true,
                 });
                 setFriendList(res.data.friendData);
@@ -31,7 +31,7 @@ const ChatPage = ({ userData }) => {
     useEffect(() => {
         const fetchUnread = async () => {
             try {
-                const res = await axios.get("http://localhost:8080/api/message/unread", {
+                const res = await axios.get("/api/message/unread", {
                     withCredentials: true,
                 });
                 setUnreadFriends(res.data.senders);
@@ -62,7 +62,7 @@ const ChatPage = ({ userData }) => {
         if (value.trim().length === 0) return setSearchResults([]);
 
         try {
-            const res = await axios.get(`http://localhost:8080/api/user/searchFriends?query=${value}`, {
+            const res = await axios.get(`/api/user/searchFriends?query=${value}`, {
                 withCredentials: true,
             });
             setSearchResults(res.data.users);
@@ -73,7 +73,7 @@ const ChatPage = ({ userData }) => {
 
     const fetchMessages = async (userId) => {
         try {
-            const res = await axios.get(`http://localhost:8080/api/message/get/${userId}`, {
+            const res = await axios.get(`/api/message/get/${userId}`, {
                 withCredentials: true,
             });
             setMessages(res.data.messages);
@@ -86,7 +86,7 @@ const ChatPage = ({ userData }) => {
         if (!newMessage.trim()) return;
         try {
             const res = await axios.post(
-                'http://localhost:8080/api/message/send',
+                '/api/message/send',
                 {
                     receiverId: selectedUser._id,
                     text: newMessage,
@@ -108,7 +108,7 @@ const ChatPage = ({ userData }) => {
 
         try {
             await axios.put(
-                `http://localhost:8080/api/message/mark-as-read/${user._id}`,
+                `/api/message/mark-as-read/${user._id}`,
                 {},
                 { withCredentials: true }
             );

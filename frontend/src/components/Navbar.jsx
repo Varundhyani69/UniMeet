@@ -19,7 +19,7 @@ const Navbar = ({ userData }) => {
         if (value.trim().length === 0) return setSearchResults([]);
 
         try {
-            const res = await axios.get(`http://localhost:8080/api/user/search?query=${value}`, { withCredentials: true });
+            const res = await axios.get(`/user/search?query=${value}`, { withCredentials: true });
             setSearchResults(res.data.users);
         } catch (err) {
             console.error("Search error:", err.message);
@@ -28,7 +28,7 @@ const Navbar = ({ userData }) => {
 
     const sendReqHandler = async (targetId) => {
         try {
-            const res = await axios.post(`http://localhost:8080/api/user/${targetId}/sendFriendRequest`, {}, { withCredentials: true });
+            const res = await axios.post(`/api/user/${targetId}/sendFriendRequest`, {}, { withCredentials: true });
             console.log(res.data.message);
         } catch (error) {
             console.error("Send/Cancel/Unfriend error:", error.message);
@@ -36,7 +36,7 @@ const Navbar = ({ userData }) => {
     };
     const respondToRequest = async (targetId, result) => {
         try {
-            const res = await axios.post(`http://localhost:8080/api/user/acceptRejectRequest`, { targetId, result }, { withCredentials: true });
+            const res = await axios.post(`/api/user/acceptRejectRequest`, { targetId, result }, { withCredentials: true });
             console.log(res.data.message);
 
         } catch (error) {
@@ -47,7 +47,7 @@ const Navbar = ({ userData }) => {
     const handleFriendRequestResponse = async (result, targetId) => {
         try {
             const res = await axios.post(
-                `http://localhost:8080/api/user/acceptRejectRequest`,
+                `/api/user/acceptRejectRequest`,
                 { result, targetId },
                 { withCredentials: true }
             );
@@ -73,7 +73,7 @@ const Navbar = ({ userData }) => {
         try {
 
             console.log(friendData);
-            const res = await axios.get(`http://localhost:8080/api/user/${selectedId}/getFriendDetails`, { withCredentials: true });
+            const res = await axios.get(`/api/user/${selectedId}/getFriendDetails`, { withCredentials: true });
             if (res.status === 200) {
                 setFriendData(res.data.friendData);
             }
@@ -89,7 +89,7 @@ const Navbar = ({ userData }) => {
     const [pending, setPending] = useState([]);
     const getPending = async () => {
         try {
-            const res = await axios.get('http://localhost:8080/api/user/getPendingReq', { withCredentials: true });
+            const res = await axios.get('/api/user/getPendingReq', { withCredentials: true });
             if (res.status === 200) {
                 setPending(res.data.myPendingReq);
             }
@@ -103,7 +103,7 @@ const Navbar = ({ userData }) => {
 
     useEffect(() => {
         const fetchNotifications = async () => {
-            const res = await axios.get('http://localhost:8080/api/user/getNotifications', { withCredentials: true });
+            const res = await axios.get('/api/user/getNotifications', { withCredentials: true });
             setNotifications(res.data.notifications || []);
         };
         fetchNotifications();
@@ -121,7 +121,7 @@ const Navbar = ({ userData }) => {
     }, []);
 
     const markAsRead = async (index) => {
-        await axios.patch(`http://localhost:8080/api/user/notification/${index}/markRead`, {}, { withCredentials: true });
+        await axios.patch(`/api/user/notification/${index}/markRead`, {}, { withCredentials: true });
         setNotifications((prev) => {
             const updated = [...prev];
             updated[index].read = true;

@@ -1,7 +1,12 @@
-.DS_Store
-Thumbs.db
+# Root
+node_modules/
+.env
+dist/
 
+# Frontend
 frontend/node_modules/
-backend/node_modules/
+frontend/dist/
 
+# Backend
+backend/node_modules/
 backend/.env

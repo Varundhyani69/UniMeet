@@ -27,20 +27,17 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const [otpError, setOtpError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState(false);
 
-    // States for email change
     const [newEmail, setNewEmail] = useState('');
     const [emailOtp, setEmailOtp] = useState('');
     const [emailOtpSent, setEmailOtpSent] = useState(false);
-    const [emailOtpVerified, setEmailOtpVerified] = useState(false);
     const [emailSuccess, setEmailSuccess] = useState(false);
 
 
 
     const [localTimetableData, setLocalTimetableData] = useState({});
-    const [editMode, setEditMode] = useState(false); // State to toggle edit mode for timetable
+    const [editMode, setEditMode] = useState(false);
 
 
-    // Initialize updateData and localTimetableData when initialUserData changes
     useEffect(() => {
         if (initialUserData) {
             setUpdateData({
@@ -62,7 +59,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const logout = async () => {
         try {
             const res = await axios.post(
-                'http://localhost:8080/api/user/logout',
+                '/api/user/logout',
                 {},
                 { withCredentials: true }
             );
@@ -81,7 +78,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const handleSubmitProfile = async () => {
         try {
             const res = await axios.post(
-                'http://localhost:8080/api/user/editProfile',
+                '/api/user/editProfile',
                 updateData,
                 { withCredentials: true }
             );
@@ -102,7 +99,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const displayDate = initialUserData.dob ? new Date(initialUserData.dob).toISOString().split('T')[0] : '00-00-00';
     const deleteHandler = async () => {
         try {
-            const res = await axios.delete('http://localhost:8080/api/user/deleteUser', { withCredentials: true })
+            const res = await axios.delete('/api/user/deleteUser', { withCredentials: true })
             if (res.status === 200) {
                 navigate('/');
                 console.log("Account deleted");
@@ -116,7 +113,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const sendOtp = async () => {
         try {
             const res = await axios.post(
-                'http://localhost:8080/api/user/sendChangePasswordOtp',
+                '/api/user/sendChangePasswordOtp',
                 {},
                 { withCredentials: true }
             );
@@ -132,7 +129,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const verifyOtp = async () => {
         try {
             const res = await axios.post(
-                'http://localhost:8080/api/user/verifyChangePasswordOtp',
+                '/api/user/verifyChangePasswordOtp',
                 { otp },
                 { withCredentials: true }
             );
@@ -148,7 +145,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const changePasswordSubmit = async () => {
         try {
             const res = await axios.post(
-                'http://localhost:8080/api/user/changePassword',
+                '/api/user/changePassword',
                 { newPassword },
                 { withCredentials: true }
             );
@@ -170,7 +167,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const sendEmailOtp = async () => {
         try {
-            const res = await axios.post('http://localhost:8080/api/user/sendChangePasswordOtp', {}, { withCredentials: true });
+            const res = await axios.post('/api/user/sendChangePasswordOtp', {}, { withCredentials: true });
             if (res.status === 200) {
                 setOtpSent(true);
                 setOtpError('');
@@ -182,7 +179,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const verifyEmailOtp = async () => {
         try {
-            const res = await axios.post('http://localhost:8080/api/user/verifyChangePasswordOtp', { otp }, { withCredentials: true });
+            const res = await axios.post('/api/user/verifyChangePasswordOtp', { otp }, { withCredentials: true });
             if (res.status === 200) {
                 setOtpVerified(true);
                 setOtpError('');
@@ -203,7 +200,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const verifyNewEmailOtp = async () => {
         try {
-            const res = await axios.post('http://localhost:8080/api/user/verifyNewEmail', { email: newEmail, otp: emailOtp }, { withCredentials: true });
+            const res = await axios.post('/api/user/verifyNewEmail', { email: newEmail, otp: emailOtp }, { withCredentials: true });
             if (res.status === 200) {
                 setEmailSuccess(true);
                 setEmailBox(false);
@@ -222,7 +219,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         formData.append('timetable', file);
 
         try {
-            const res = await axios.post('http://localhost:8080/api/timetable/upload-timetable',
+            const res = await axios.post('/api/timetable/upload-timetable',
                 formData,
                 {
                     withCredentials: true,
@@ -235,7 +232,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             if (res.data.success) {
                 let structuredTimetable = res.data.timetable;
 
-                // ✅ Add Sunday if missing
                 if (!structuredTimetable["Sunday"]) {
                     structuredTimetable["Sunday"] = {
                         "09-10 AM": "No class",
@@ -287,7 +283,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         try {
             const updatedTimetable = { ...localTimetableData };
 
-            // ✅ Add Sunday if missing before sending to backend
             if (!updatedTimetable["Sunday"]) {
                 updatedTimetable["Sunday"] = {
                     "09-10 AM": "No class",
@@ -303,7 +298,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             }
 
             const res = await axios.post(
-                'http://localhost:8080/api/timetable/editTimetable',
+                '/api/timetable/editTimetable',
                 { timetable: updatedTimetable },
                 { withCredentials: true }
             );
@@ -374,7 +369,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         if (!file) return;
 
         setPreview(URL.createObjectURL(file));
-        setSelectedFile(file); // Save actual file
+        setSelectedFile(file);
     };
     const handleClose = () => {
         setPreview('');
@@ -386,7 +381,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         formData.append("pfp", selectedFile);
 
         try {
-            const res = await axios.post('http://localhost:8080/api/user/uploadPfp', formData, {
+            const res = await axios.post('/api/user/uploadPfp', formData, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'multipart/form-data'

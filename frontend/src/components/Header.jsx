@@ -15,7 +15,6 @@ const Header = ({ userData }) => {
         "05-06 PM"
     ];
 
-    // Helper to convert slot string to comparable number for current time
     const parseSlotTime = (slot) => {
         const [time, period] = slot.split(' ');
         const [start, end] = time.split('-').map(Number);

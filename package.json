@@ -1,0 +1,11 @@
+{
+    "scripts": {
+        "dev": "concurrently \"npm run server\" \"npm run client\"",
+        "server": "nodemon backend/server.js",
+        "client": "vite --config frontend/vite.config.js",
+        "build": "cd frontend && npm install && npm run build"
+    },
+    "devDependencies": {
+        "concurrently": "^8.0.0"
+    }
+}

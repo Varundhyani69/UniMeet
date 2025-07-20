@@ -10,7 +10,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const res = await axios.get('http://localhost:8080/api/user/getUserDetails', { withCredentials: true })
+                const res = await axios.get('/api/user/getUserDetails', { withCredentials: true })
                 if (res.data.success) {
                     setUserData(res.data.user);
                 }

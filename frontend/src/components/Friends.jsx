@@ -14,7 +14,7 @@ const Friends = ({ userData }) => {
 
     const fetchFriendData = async () => {
         try {
-            const res = await axios.get('http://localhost:8080/api/user/getFriends', {
+            const res = await axios.get('/api/user/getFriends', {
                 withCredentials: true
             });
 
@@ -93,7 +93,7 @@ const Friends = ({ userData }) => {
     }, [friendData, userData]);
     const sendReminder = async (friendId) => {
         try {
-            const res = await axios.post(`http://localhost:8080/api/user/sendReminder/${friendId}`, {}, {
+            const res = await axios.post(`/api/user/sendReminder/${friendId}`, {}, {
                 withCredentials: true
             });
 

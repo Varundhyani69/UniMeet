@@ -7,7 +7,7 @@ const RegisterLogin = () => {
     const [choice, setChoice] = useState('register');
 
     useEffect(() => {
-        axios.get('http://localhost:8080/api/user/me', { withCredentials: true })
+        axios.get('/api/user/me', { withCredentials: true })
             .then(() => navigate('/dashboard'))
             .catch(() => { });
     }, []);
@@ -27,7 +27,7 @@ const RegisterLogin = () => {
     const submitRegDetails = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:8080/api/user/register', regDetails, { withCredentials: true });
+            const res = await axios.post('/api/user/register', regDetails, { withCredentials: true });
             if (res.status === 200) {
                 setChoice('login');
                 navigate('/');
@@ -49,7 +49,7 @@ const RegisterLogin = () => {
     const submitLoginDetails = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:8080/api/user/login', loginDetails, { withCredentials: true });
+            const res = await axios.post('/api/user/login', loginDetails, { withCredentials: true });
             if (res.status === 200) {
                 navigate('/dashboard');
             }
