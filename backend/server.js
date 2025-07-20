@@ -21,11 +21,7 @@ const PORT = process.env.PORT;
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("DB connected"))
     .catch((err) => console.log("DB connection error:", err));
-
-const allowedOrigins = [
-    'https://unimeet-3ozr.onrender.com',
-    'http://localhost:5173',
-];
+const allowedOrigins = process.env.CORS_ORIGIN;
 
 app.use(cookieParser());
 app.use(express.json());
