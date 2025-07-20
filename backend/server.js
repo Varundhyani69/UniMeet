@@ -44,7 +44,7 @@ app.use('/api/user', userRoute);
 app.use('/api/message', messageRoutes);
 app.use('/api/timetable', timetableRoutes);
 
-const frontendPath = path.join(__dirname, 'frontend', 'dist');
+const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendPath));
 app.get('*', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
