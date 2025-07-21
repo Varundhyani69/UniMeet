@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
+import { toast } from 'react-toastify';
 const Header = ({ userData }) => {
     const [nextClass, setNextClass] = useState(null);
 
@@ -32,7 +32,7 @@ const Header = ({ userData }) => {
         if (timetable) {
             for (let slot of slots) {
                 const slotHour = parseSlotTime(slot);
-                if (slotHour >= hour && timetable[slot] && timetable[slot] !== "No class") {
+                if (slotHour > hour && timetable[slot] && timetable[slot] !== "No class") {
                     setNextClass({
                         subject: timetable[slot],
                         slot

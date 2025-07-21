@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
-
+import { toast } from 'react-toastify';
 
 const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData }) => {
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
@@ -11,7 +11,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const timetableFileInputRef = useRef(null);
 
     const [updateData, setUpdateData] = useState({});
-
+    const [loading, setLoading] = useState(false);
 
     const [editPop, setEditPop] = useState(false);
     const [deleteBox, setDeleteBox] = useState(false);
@@ -56,6 +56,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
 
     const logout = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/user/logout`,
@@ -63,10 +64,14 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 { withCredentials: true }
             );
             if (res.data.success) {
+                toast.success(res.data.message);
                 navigate('/');
             }
         } catch (error) {
+            toast.error(error.response.data.message);
             console.error("Logout failed:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -75,6 +80,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     };
 
     const handleSubmitProfile = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/user/editProfile`,
@@ -82,6 +88,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 { withCredentials: true }
             );
             if (res.status === 200) {
+                toast.success(res.data.message);
                 if (setParentUserData) {
                     setParentUserData(prev => ({
                         ...prev,
@@ -90,26 +97,35 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 }
                 setEditPop(false);
             }
-        } catch (err) {
+        } catch (error) {
+            toast.error(error.response.data.message);
             console.log('Profile update error:', err.response?.data || err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const displayDate = initialUserData.dob ? new Date(initialUserData.dob).toISOString().split('T')[0] : '00-00-00';
     const deleteHandler = async () => {
+        setLoading(true);
         try {
             const res = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/user/deleteUser`, { withCredentials: true })
             if (res.status === 200) {
+                toast.success(res.data.message);
                 navigate('/');
                 console.log("Account deleted");
             }
-        } catch (err) {
+        } catch (error) {
+            toast.error(error.response.data.message);
             console.log('Profile update error:', err.response?.data || err.message);
+        } finally {
+            setLoading(false);
         }
     }
 
 
     const sendOtp = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/user/sendChangePasswordOtp`,
@@ -117,15 +133,20 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 { withCredentials: true }
             );
             if (res.status === 200) {
+                toast.success(res.data.message);
                 setOtpSent(true);
                 setOtpError('');
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             setOtpError(err.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setLoading(false);
         }
     };
 
     const verifyOtp = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/user/verifyChangePasswordOtp`,
@@ -133,15 +154,20 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 { withCredentials: true }
             );
             if (res.status === 200) {
+                toast.success(res.data.message);
                 setOtpVerified(true);
                 setOtpError('');
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             setOtpError(err.response?.data?.message || "Invalid OTP");
+        } finally {
+            setLoading(false);
         }
     };
 
     const changePasswordSubmit = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/user/changePassword`,
@@ -149,6 +175,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 { withCredentials: true }
             );
             if (res.status === 200) {
+                toast.success(res.data.message);
                 setPasswordSuccess(true);
                 setTimeout(() => {
                     setPasswordBox(false);
@@ -160,57 +187,83 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 }, 2000);
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             setOtpError(err.response?.data?.message || "Failed to change password");
+        } finally {
+            setLoading(false);
         }
     };
 
     const sendEmailOtp = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendChangePasswordOtp`, {}, { withCredentials: true });
             if (res.status === 200) {
+                toast.success(res.data.message);
                 setOtpSent(true);
                 setOtpError('');
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             setOtpError(err.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setLoading(false);
         }
     };
 
     const verifyEmailOtp = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/verifyChangePasswordOtp`, { otp }, { withCredentials: true });
             if (res.status === 200) {
+                toast.success(res.data.message);
                 setOtpVerified(true);
                 setOtpError('');
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             setOtpError(err.response?.data?.message || "Invalid OTP");
+        } finally {
+            setLoading(false);
         }
     };
 
     const sendOtpToNewEmail = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendVerificationNewEmail`, { email: newEmail }, { withCredentials: true });
-            if (res.status === 200) setEmailOtpSent(true);
+            if (res.status === 200) {
+                toast.success(res.data.message);
+                setEmailOtpSent(true);
+            }
         } catch (err) {
+            toast.error(err.response.data.message);
             console.log(err.response?.data || err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const verifyNewEmailOtp = async () => {
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/verifyNewEmail`, { email: newEmail, otp: emailOtp }, { withCredentials: true });
             if (res.status === 200) {
+                toast.success(res.data.message);
                 setEmailSuccess(true);
                 setEmailBox(false);
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             console.log(err.response?.data || err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
 
     const handleFileUpload = async (e) => {
+        setLoading(true);
         const file = e.target.files[0];
         if (!file) return;
 
@@ -229,6 +282,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             );
 
             if (res.data.success) {
+                toast.success(res.data.message);
                 let structuredTimetable = res.data.timetable;
 
                 if (!structuredTimetable["Sunday"]) {
@@ -253,15 +307,15 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 }
 
                 setEditMode(false);
-                alert("Timetable uploaded/reuploaded successfully!");
             } else {
                 console.error("Upload failed with success: false", res.data.message);
-                alert(`Upload failed: ${res.data.message || "Unknown error"}`);
             }
 
         } catch (err) {
+            toast.error(err.response.data.message);
             console.error("Upload failed:", err.response?.data || err.message);
-            alert(`Timetable upload failed: ${err.response?.data?.message || err.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -279,6 +333,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
 
     const handleTimetableSubmit = async () => {
+        setLoading(true);
         try {
             const updatedTimetable = { ...localTimetableData };
 
@@ -303,6 +358,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             );
 
             if (res.data.success) {
+                toast.success(res.data.message);
                 setEditMode(false);
                 console.log('Manually updated timetable saved:', res.data.timetable);
                 if (setParentUserData) {
@@ -312,7 +368,10 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 console.log("Manual update failed:", res.data.message);
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             console.log('Manual timetable update error:', err.response?.data || err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -378,7 +437,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
         const formData = new FormData();
         formData.append("pfp", selectedFile);
-
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/uploadPfp`, formData, {
                 withCredentials: true,
@@ -388,12 +447,15 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             });
 
             if (res.status === 200) {
-                alert("Profile picture uploaded successfully");
+                toast.success(res.data.message);
                 setPreview('');
                 setSelectedFile(null);
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             console.log('Upload error:', err.response?.data || err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -478,7 +540,12 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                     onClick={handleSubmitProfile}
                                     className="px-6 py-2 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition"
                                 >
-                                    Save Changes
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Save Changes"
+                                    )}
+
                                 </button>
                             </div>
                         </div>
@@ -499,7 +566,11 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 onClick={sendOtp}
                                 className="w-full bg-[#FEC674] text-white font-bold py-2 rounded hover:scale-105 transition"
                             >
-                                Send OTP
+                                {loading ? (
+                                    <span className="loader mr-2"></span>
+                                ) : (
+                                    "Send OTP"
+                                )}
                             </button>
                         </>
                     )}
@@ -518,13 +589,23 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                     onClick={() => setPasswordBox(false)}
                                     className="bg-gray-300 px-4 py-2 rounded"
                                 >
-                                    Cancel
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Cancel"
+                                    )}
+
                                 </button>
                                 <button
                                     onClick={verifyOtp}
                                     className="bg-[#FEC674] text-white font-bold px-4 py-2 rounded"
                                 >
-                                    Verify OTP
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Verify OTP"
+                                    )}
+
                                 </button>
                             </div>
                             {otpError && <p className="text-red-500 text-sm mt-2">{otpError}</p>}
@@ -545,13 +626,23 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                     onClick={() => setPasswordBox(false)}
                                     className="bg-gray-300 px-4 py-2 rounded"
                                 >
-                                    Cancel
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Cancel"
+                                    )}
+
                                 </button>
                                 <button
                                     onClick={changePasswordSubmit}
                                     className="bg-[#FEC674] text-white font-bold px-4 py-2 rounded"
                                 >
-                                    Update Password
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Update Password"
+                                    )}
+
                                 </button>
                             </div>
                             {passwordSuccess && <p className="text-green-600 mt-2">Password changed successfully!</p>}
@@ -570,28 +661,48 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         {!otpSent && !otpVerified && (
                             <>
                                 <p className="text-sm">Send OTP to your current email to proceed.</p>
-                                <button onClick={sendEmailOtp} className="mt-3 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">Send OTP</button>
+                                <button onClick={sendEmailOtp} className="mt-3 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Send OTP"
+                                    )}</button>
                             </>
                         )}
 
                         {otpSent && !otpVerified && (
                             <>
                                 <input type="number" placeholder="Enter OTP" className="w-full px-3 py-2 border rounded mt-3" value={otp} onChange={(e) => setOtp(e.target.value)} />
-                                <button onClick={verifyEmailOtp} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">Verify OTP</button>
+                                <button onClick={verifyEmailOtp} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Verify OTP"
+                                    )}</button>
                             </>
                         )}
 
                         {otpVerified && !emailOtpSent && (
                             <>
                                 <input type="email" placeholder="Enter new email" className="w-full px-3 py-2 border rounded mt-3" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-                                <button onClick={sendOtpToNewEmail} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">Send OTP to new email</button>
+                                <button onClick={sendOtpToNewEmail} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Send OTP to new email"
+                                    )}</button>
                             </>
                         )}
 
                         {emailOtpSent && (
                             <>
                                 <input type="number" placeholder="Enter OTP from new email" className="w-full px-3 py-2 border rounded mt-3" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} />
-                                <button onClick={verifyNewEmailOtp} className="mt-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold">Verify & Save</button>
+                                <button onClick={verifyNewEmailOtp} className="mt-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold">
+                                    {loading ? (
+                                        <span className="loader mr-2"></span>
+                                    ) : (
+                                        "Verify & Save"
+                                    )}</button>
                             </>
                         )}
 
@@ -610,7 +721,13 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                     <h2 className="text-lg mb-4">Do you really want to delete your account?</h2>
                     <div className="flex gap-4 justify-end">
                         <button onClick={() => setDeleteBox(false)} className="bg-gray-300 px-4 py-1 rounded cursor-pointer transition transform duration-200 hover:scale-105">Cancel</button>
-                        <button onClick={deleteHandler} className="bg-red-500 text-white px-4 py-1 rounded cursor-pointer transform hover:scale-105">Delete</button>
+                        <button onClick={deleteHandler} className="bg-red-500 text-white px-4 py-1 rounded cursor-pointer transform hover:scale-105">
+                            {loading ? (
+                                <span className="loader mr-2"></span>
+                            ) : (
+                                "Delete"
+                            )}
+                        </button>
                     </div>
                 </div>
             )}
@@ -801,7 +918,12 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 onClick={uploadPfp}
                                 className="bg-[#FEC674] px-6 py-2 rounded-xl shadow-md hover:scale-105 transition"
                             >
-                                Save
+                                {loading ? (
+                                    <span className="loader mr-2"></span>
+                                ) : (
+                                    "Save"
+                                )}
+
                             </button>
                         </div>
                     </div>
@@ -845,7 +967,12 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 className="text-red-600 font-bold cursor-pointer hover:underline"
                                 onClick={() => setDeleteBox(true)}
                             >
-                                Delete Account
+                                {loading ? (
+                                    <span className="loader mr-2"></span>
+                                ) : (
+                                    "Delete Account"
+                                )}
+
                             </li>
                         </ul>
 
@@ -853,7 +980,12 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             className="w-full mt-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition font-semibold cursor-pointer transform hover:scale-105 duration-200"
                             onClick={logout}
                         >
-                            Logout
+                            {loading ? (
+                                <span className="loader mr-2"></span>
+                            ) : (
+                                "Logout"
+                            )}
+
                         </button>
                     </div>
                 </div>
@@ -880,7 +1012,12 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             onClick={() => setEditPop(true)}
                             className="px-6 py-2 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition cursor-pointer"
                         >
-                            Edit Profile
+                            {loading ? (
+                                <span className="loader mr-2"></span>
+                            ) : (
+                                "Edit Profile"
+                            )}
+
                         </button>
                         <button
                             onClick={() => {
@@ -889,6 +1026,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             }}
                             className="px-6 py-2 ml-3 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition cursor-pointer"
                         >
+
                             View/Edit Timetable
                         </button>
                     </div>

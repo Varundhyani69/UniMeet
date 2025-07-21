@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-
+import { toast } from 'react-toastify';
+import "../App.css";
 const Navbar = ({ userData }) => {
     const [searchBox, setSearchBox] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-
+    const [loading, setLoading] = useState(false);
     const toggleSearch = () => {
         setSearchBox(prev => !prev);
         setSearchTerm('');
@@ -27,20 +28,28 @@ const Navbar = ({ userData }) => {
     };
 
     const sendReqHandler = async (targetId) => {
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/${targetId}/sendFriendRequest`, {}, { withCredentials: true });
-            console.log(res.data.message);
+            if (res.status === 200) toast.success(res.data.message);
         } catch (error) {
+            toast.error(err.response.data.message);
             console.error("Send/Cancel/Unfriend error:", error.message);
+        } finally {
+            setLoading(false);
         }
     };
     const respondToRequest = async (targetId, result) => {
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/acceptRejectRequest`, { targetId, result }, { withCredentials: true });
             console.log(res.data.message);
-
+            if (res.status === 200) toast.success(res.data.message);
         } catch (error) {
+            toast.error(err.response.data.message);
             console.error("Accept/Reject error:", error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -53,11 +62,12 @@ const Navbar = ({ userData }) => {
             );
 
             if (res.status === 200 || res.status === 400) {
-                console.log(res.data.message);
+                toast.success(res.data.message);
                 setShowDropdown(false);
                 window.location.reload();
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             console.error("Friend request response error:", err.message);
         }
     };
@@ -94,7 +104,7 @@ const Navbar = ({ userData }) => {
                 setPending(res.data.myPendingReq);
             }
         } catch (error) {
-
+            console.log(error);
         }
     }
     const [notifications, setNotifications] = useState([]);
@@ -168,6 +178,7 @@ const Navbar = ({ userData }) => {
                                                     className="text-green-500 hover:underline"
                                                     onClick={() => handleFriendRequestResponse(true, user._id)}
                                                 >
+
                                                     Accept
                                                 </button>
                                                 <button
@@ -268,30 +279,48 @@ const Navbar = ({ userData }) => {
                                                         {userData?.friends?.includes(friendData._id) ? (
                                                             <button
                                                                 onClick={() => sendReqHandler(friendData._id)}
-                                                                className="text-red-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl"
+                                                                className="text-red-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl cursor-pointer"
                                                             >
-                                                                Unfriend
+                                                                {loading ? (
+                                                                    <span className="loader mr-2"></span>
+                                                                ) : (
+                                                                    "Unfriend"
+                                                                )}
+
                                                             </button>
                                                         ) : friendData?.pendingRequest?.includes(userData._id) ? (
                                                             <button
                                                                 onClick={() => sendReqHandler(friendData._id)}
-                                                                className="text-yellow-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl"
-                                                            >
-                                                                Cancel
+                                                                className="text-yellow-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl cursor-pointer"
+                                                            >{loading ? (
+                                                                <span className="loader mr-2"></span>
+                                                            ) : (
+                                                                "Cancel"
+                                                            )}
+
                                                             </button>
                                                         ) : userData?.pendingRequest?.includes(friendData._id) ? (
                                                             <button
                                                                 onClick={() => respondToRequest(friendData._id, true)}
-                                                                className="text-green-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl"
-                                                            >
-                                                                Accept
+                                                                className="text-green-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl cursor-pointer"
+                                                            >{loading ? (
+                                                                <span className="loader mr-2"></span>
+                                                            ) : (
+                                                                "Accept"
+                                                            )}
+
                                                             </button>
                                                         ) : (
                                                             <button
                                                                 onClick={() => sendReqHandler(friendData._id)}
-                                                                className="text-blue-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl"
+                                                                className="text-blue-500 hover:scale-105 transition transform bg-white px-5 py-1 rounded-xl shadow-xl cursor-pointer"
                                                             >
-                                                                Send Request
+                                                                {loading ? (
+                                                                    <span className="loader mr-2"></span>
+                                                                ) : (
+                                                                    "Send Request"
+                                                                )}
+
                                                             </button>
                                                         )}
                                                     </div>

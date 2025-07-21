@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
-
+import { toast } from 'react-toastify';
 const RegisterLogin = () => {
     const navigate = useNavigate();
     const [choice, setChoice] = useState('register');
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/me`, { withCredentials: true })
@@ -26,14 +27,19 @@ const RegisterLogin = () => {
 
     const submitRegDetails = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/register`, regDetails, { withCredentials: true });
             if (res.status === 200) {
+                toast.success(res.data.message);
                 setChoice('login');
                 navigate('/');
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             console.error('Registration error:', err.response?.data || err.message);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -48,14 +54,19 @@ const RegisterLogin = () => {
 
     const submitLoginDetails = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/login`, loginDetails, { withCredentials: true });
             if (res.status === 200) {
+                toast.success(res.data.message);
                 navigate('/dashboard');
             }
 
         } catch (error) {
+            toast.error(error.response.data.message);
             console.log('Login error:', error.response?.data || error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -80,8 +91,14 @@ const RegisterLogin = () => {
                             onClick={() => document.getElementById("main-form").requestSubmit()}
                             className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center absolute right-1 left-2 top-2 bottom-1 shadow-md hover:bg-gray-800 transition"
                             title="Submit"
+                            disabled={loading}
                         >
-                            <i className="text-2xl text-[#FEC674] fa-solid fa-arrow-right"></i>
+                            {loading ? (
+                                <span className="loader mr-2"></span>
+                            ) : (
+                                < i className="text-2xl text-[#FEC674] fa-solid fa-arrow-right"></i>
+                            )}
+
                         </button>
                     </div>
 
@@ -137,7 +154,7 @@ const RegisterLogin = () => {
                     </span>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

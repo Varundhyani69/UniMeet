@@ -1,11 +1,11 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-
+import { toast } from 'react-toastify';
 const Friends = ({ userData }) => {
     const [friendList, setFriendList] = useState([]);
     const [friendData, setFriendData] = useState([]);
     const [availableFriends, setAvailableFriends] = useState([]);
-
+    const [loading, setLoading] = useState(false);
     useEffect(() => {
         if (userData?.friends) {
             setFriendList(userData.friends);
@@ -92,16 +92,20 @@ const Friends = ({ userData }) => {
         setAvailableFriends(matched);
     }, [friendData, userData]);
     const sendReminder = async (friendId) => {
+        setLoading(true);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendReminder/${friendId}`, {}, {
                 withCredentials: true
             });
 
             if (res.status === 200) {
-                console.log("Reminder sent!");
+                toast.success(res.data.message);
             }
         } catch (err) {
+            toast.error(err.response.data.message);
             console.error("Send reminder failed:", err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -136,6 +140,8 @@ const Friends = ({ userData }) => {
                                 <div className='h-2 w-2 rounded-full bg-green-300'></div>
                             </h4>
                             <button onClick={() => sendReminder(friend._id)} className="bg-[#FFF3E2] p-2 rounded-xl cursor-pointer hover:bg-[#fff3e27f] transform hover:scale-105 transition duration-200">
+
+
                                 Send Reminder
                             </button>
                         </div>
