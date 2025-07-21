@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 import userRoute from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
@@ -14,14 +16,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
+const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'];
+
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: allowedOrigins,
+        credentials: true,
+    },
+});
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("DB connected"))
     .catch((err) => console.log("DB connection error:", err));
-const allowedOrigins = process.env.CORS_ORIGIN;
 
 app.use(cookieParser());
 app.use(express.json());
@@ -46,8 +55,52 @@ app.get('/*', (req, res, next) => {
     if (req.originalUrl.startsWith('/api/')) return next();
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
-app.listen(PORT, () => {
-    console.log("Server is listening on port " + PORT);
+
+const onlineUsers = new Map();
+
+io.on("connection", (socket) => {
+    console.log("Socket connected:", socket.id);
+
+    socket.on("setup", (userData) => {
+        onlineUsers.set(userData._id, socket.id);
+        socket.join(userData._id);
+        console.log(`User ${userData.username} joined room: ${userData._id}`);
+    });
+    socket.on("send-message", (message) => {
+        const receiverId = message.receiver;
+        const receiverSocketId = onlineUsers.get(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("receive-message", message);
+        }
+    });
+
+    socket.on("friend-request", ({ sender, receiverId }) => {
+        const targetSocket = onlineUsers.get(receiverId);
+        if (targetSocket) {
+            io.to(targetSocket).emit("friend-request-received", {
+                message: `${sender.username} sent you a friend request`,
+                senderId: sender._id,
+                read: false
+            });
+        }
+    });
+    socket.on("send-notification", ({ receiverId, notification }) => {
+        const targetSocket = onlineUsers.get(receiverId);
+        if (targetSocket) {
+            io.to(targetSocket).emit("notification-received", notification);
+        }
+    });
+    socket.on("disconnect", () => {
+        console.log("Socket disconnected:", socket.id);
+        for (let [userId, socketId] of onlineUsers) {
+            if (socketId === socket.id) {
+                onlineUsers.delete(userId);
+                break;
+            }
+        }
+    });
 });
 
-export default app;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

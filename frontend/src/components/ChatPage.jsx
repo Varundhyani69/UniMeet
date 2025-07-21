@@ -1,6 +1,10 @@
-// ✅ Completed ChatPage with new message indicator and mark as read
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
+
+const socket = io(import.meta.env.VITE_API_BASE_URL, {
+    withCredentials: true,
+});
 
 const ChatPage = ({ userData }) => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -93,12 +97,15 @@ const ChatPage = ({ userData }) => {
                 },
                 { withCredentials: true }
             );
-            setMessages(prev => [...prev, res.data.message]);
+            const sentMsg = res.data.message;
+            setMessages(prev => [...prev, sentMsg]);
+            socket.emit("send-message", sentMsg);
             setNewMessage('');
         } catch (err) {
             console.error('Send message error:', err.message);
         }
     };
+
 
     const handleSelectUser = async (user) => {
         setSelectedUser(user);
@@ -124,6 +131,24 @@ const ChatPage = ({ userData }) => {
             fetchMessages(selectedUser._id);
         }
     }, [selectedUser]);
+    useEffect(() => {
+        socket.on("receive-message", (data) => {
+            if (selectedUser && data.sender === selectedUser._id) {
+                setMessages((prev) => [...prev, data]);
+            } else {
+                setUnreadFriends((prev) => [...new Set([...prev, data.sender])]);
+            }
+        });
+
+        return () => {
+            socket.off("receive-message");
+        };
+    }, [selectedUser]);
+    useEffect(() => {
+        if (userData?._id) {
+            socket.emit("setup", userData);
+        }
+    }, [userData]);
 
     return (
         <div className='mb-10'>
