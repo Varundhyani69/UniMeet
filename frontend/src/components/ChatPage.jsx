@@ -13,10 +13,10 @@ const ChatPage = ({ userData }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [unreadFriends, setUnreadFriends] = useState([]);
-
     const [searchBox, setSearchBox] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+    const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
     useEffect(() => {
         const fetchFriends = async () => {
@@ -53,9 +53,7 @@ const ChatPage = ({ userData }) => {
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleSearchChange = async (e) => {
@@ -106,12 +104,14 @@ const ChatPage = ({ userData }) => {
         }
     };
 
-
     const handleSelectUser = async (user) => {
         setSelectedUser(user);
         setSearchTerm('');
         setSearchResults([]);
         setSearchBox(false);
+        if (window.innerWidth < 1024) {
+            setIsMobileChatOpen(true);
+        }
 
         try {
             await axios.put(
@@ -125,12 +125,12 @@ const ChatPage = ({ userData }) => {
         }
     };
 
-
     useEffect(() => {
         if (selectedUser) {
             fetchMessages(selectedUser._id);
         }
     }, [selectedUser]);
+
     useEffect(() => {
         socket.on("receive-message", (data) => {
             if (selectedUser && data.sender === selectedUser._id) {
@@ -139,11 +139,9 @@ const ChatPage = ({ userData }) => {
                 setUnreadFriends((prev) => [...new Set([...prev, data.sender])]);
             }
         });
-
-        return () => {
-            socket.off("receive-message");
-        };
+        return () => socket.off("receive-message");
     }, [selectedUser]);
+
     useEffect(() => {
         if (userData?._id) {
             socket.emit("setup", userData);
@@ -152,9 +150,10 @@ const ChatPage = ({ userData }) => {
 
     return (
         <div className='mb-10'>
-            <div className='h-150 flex'>
-                {/* Left Side */}
-                <div className='h-150 w-110 bg-[#FFF3E2] relative' ref={containerRef}>
+            <div className='h-150 flex flex-col lg:flex-row gap-3'>
+
+                {/* Friend List Panel */}
+                <div className={`h-150 w-full lg:w-110 bg-[#FFF3E2] relative ${isMobileChatOpen ? 'hidden lg:block' : ''}`} ref={containerRef}>
                     <div className='flex items-center px-2 justify-center mt-5'>
                         <input
                             type='text'
@@ -219,15 +218,27 @@ const ChatPage = ({ userData }) => {
                     </div>
                 </div>
 
-                {/* Right Side */}
-                <div className='h-150 w-full'>
+                {/* Chat Panel */}
+                <div className={`h-150 w-full ${isMobileChatOpen ? 'block' : 'hidden lg:block'}`}>
                     {!selectedUser ? (
                         <div className='h-150 w-full flex flex-col justify-center text-center'>
                             <i className='fa-solid fa-comments text-5xl mb-4'></i>
                             <h2>Send a message to start a chat</h2>
                         </div>
                     ) : (
-                        <div ref={containerRef} className='h-150 w-full'>
+                        <div className='h-150 w-full'>
+                            {/* Mobile back button */}
+                            <div className='lg:hidden flex items-center gap-3 mb-2'>
+                                <button
+                                    onClick={() => setIsMobileChatOpen(false)}
+                                    className='text-[#FEC674] text-xl px-3'
+                                >
+                                    ← Back
+                                </button>
+                                <h1 className='font-semibold'>{selectedUser.username}</h1>
+                            </div>
+
+                            {/* Header */}
                             <div className='h-15 bg-[#FEC674] rounded-xl w-full flex gap-3 items-center shadow-lg'>
                                 <img
                                     src={selectedUser.pfp || '/default-avatar.png'}
@@ -239,6 +250,7 @@ const ChatPage = ({ userData }) => {
                                 </div>
                             </div>
 
+                            {/* Chat Body */}
                             <div className='h-120 w-full bg-[#FFF3E2] overflow-y-auto scrollbar-hide flex flex-col-reverse'>
                                 <div className='px-4 py-2'>
                                     {messages.map((msg, i) => (
@@ -255,6 +267,7 @@ const ChatPage = ({ userData }) => {
                                 </div>
                             </div>
 
+                            {/* Input */}
                             <div className='h-15 w-full shadow-xl flex justify-center gap-3 items-center bg-[#FEC674] rounded-xl'>
                                 <input
                                     value={newMessage}

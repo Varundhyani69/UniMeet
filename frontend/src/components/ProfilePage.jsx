@@ -460,7 +460,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     };
 
     return (
-        <div className="mb-2 font-[Inter]">
+        <div className="mb-8 font-[Inter]">
             <h1 className="text-3xl font-extrabold text-center mb-2 text-gray-800">
                 MY PROFILE
             </h1>
@@ -1007,29 +1007,28 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         <div className="md:col-span-2"><b>Bio:</b> <i>{initialUserData.bio}</i></div>
                     </div>
 
-                    <div className="mt-8">
+                    <div className="mt-8 flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-3">
                         <button
                             onClick={() => setEditPop(true)}
-                            className="px-6 py-2 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition cursor-pointer"
+                            className="w-full md:w-auto px-6 py-2 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition cursor-pointer"
                         >
                             {loading ? (
                                 <span className="loader mr-2"></span>
                             ) : (
                                 "Edit Profile"
                             )}
-
                         </button>
                         <button
                             onClick={() => {
                                 setTimetablePop(true);
                                 setEditMode(false);
                             }}
-                            className="px-6 py-2 ml-3 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition cursor-pointer"
+                            className="w-full md:w-auto px-6 py-2 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition cursor-pointer"
                         >
-
                             View/Edit Timetable
                         </button>
                     </div>
+
                 </div>
             </div>
         </div >

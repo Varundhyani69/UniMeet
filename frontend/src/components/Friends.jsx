@@ -19,7 +19,7 @@ const Friends = ({ userData }) => {
             });
 
             if (res.status === 200 && Array.isArray(res.data.friendData)) {
-                console.log("Friend data fetched:", res.data.friendData);
+                // console.log("Friend data fetched:", res.data.friendData);
                 setFriendData(res.data.friendData);
             }
         } catch (error) {
@@ -63,7 +63,7 @@ const Friends = ({ userData }) => {
                 .filter(([time, subject]) => validTime(time) && subject === "No class")
                 .map(([time]) => time);
         }
-        console.log(friendData);
+        // console.log(friendData);
         const matched = friendData
             .map(friend => {
                 let friendSlots = [];

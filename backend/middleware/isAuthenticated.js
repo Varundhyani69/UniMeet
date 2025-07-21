@@ -4,8 +4,8 @@ const isAuthenticated = async (req, res, next) => {
     const { token } = req.cookies || {};
 
     try {
-        console.log("Cookies received:", req.cookies);
-        console.log("Token received:", token);
+        // console.log("Cookies received:", req.cookies);
+        // console.log("Token received:", token);
         if (!token) {
             return res.status(401).json({ success: false, message: "Not authorized! Login again" });
         }
