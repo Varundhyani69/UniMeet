@@ -429,24 +429,43 @@ export const getPendingReq = async (req, res) => {
         res.status(500).json({ success: false, message: "Can't get friends" });
     }
 }
-
 export const deleteUser = async (req, res) => {
     try {
         const userId = req.userId;
-        await User.findByIdAndDelete(userId);
+
+        const deletedUser = await User.findByIdAndDelete(userId);
+        if (!deletedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        await User.updateMany(
+            {},
+            {
+                $pull: {
+                    friends: userId,
+                    pendingRequest: userId,
+                    notifications: { from: userId }
+                }
+            }
+        );
+
+        await Message.deleteMany({
+            $or: [{ sender: userId }, { receiver: userId }]
+        });
+
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
         });
 
-        return res.json({ success: true, message: "Account deleted successfully" });
+        return res.json({ success: true, message: "Account and related data deleted successfully" });
+
     } catch (error) {
         console.error("Delete User error:", error);
-        res.status(500).json({ success: false, message: "Failed to delete account" });
+        return res.status(500).json({ success: false, message: "Failed to delete account" });
     }
 };
-
 
 export const searchUsers = async (req, res) => {
     try {
@@ -560,7 +579,6 @@ export const getMe = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
         res.status(200).json({ success: true, user });
     } catch (err) {
-        console.error("Me route error:", err.message);
         res.status(500).json({ message: "Server error" });
     }
 }

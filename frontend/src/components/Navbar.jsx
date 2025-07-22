@@ -20,6 +20,7 @@ const Navbar = ({ userData, updateUserData }) => {
     const dropdownRef = useRef();
     const unreadCount = notifications.filter(n => !n.read).length;
 
+
     const toggleSearch = () => {
         setSearchBox(prev => !prev);
         setSearchTerm('');
@@ -133,6 +134,15 @@ const Navbar = ({ userData, updateUserData }) => {
         }
     };
 
+    useEffect(() => {
+        getPending();
+
+        socket.on("friend-request-received", () => {
+            getPending();
+        });
+
+        return () => socket.off("friend-request-received");
+    }, []);
     const fetchNotifications = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/getNotifications`, { withCredentials: true });
@@ -191,7 +201,6 @@ const Navbar = ({ userData, updateUserData }) => {
         };
 
         const handleFriendRequestAccepted = ({ sender }) => {
-            console.log("📥 Received: friend-request-accepted", sender);
             toast.success(`${sender.username} accepted your friend request`);
             setNotifications(prev => [
                 ...prev,
@@ -217,7 +226,6 @@ const Navbar = ({ userData, updateUserData }) => {
         };
 
         const handleGenericNotification = (notification) => {
-            console.log("📥 Received: notification-received", notification);
             setNotifications(prev => [notification, ...prev]);
         };
 
@@ -245,8 +253,18 @@ const Navbar = ({ userData, updateUserData }) => {
                     <div className="relative">
                         <i
                             className="fa-solid ml-2 fa-user-group text-xl text-[#FEC674] cursor-pointer"
-                            onClick={() => { getPending(); setShowDropdown(!showDropdown); }}
+                            onClick={() => {
+                                getPending();
+                                setShowDropdown(!showDropdown);
+                            }}
                         ></i>
+
+                        {/* 🔴 Badge dot only if pending requests exist */}
+                        {pending.length > 0 && (
+                            <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                        )}
+
+                        {/* Dropdown content */}
                         {showDropdown && (
                             <div className="absolute right-0 left-0 mt-2 w-70 bg-white shadow-xl rounded-lg z-50">
                                 <div className="p-3 border-b font-semibold">Friend Requests</div>
@@ -262,6 +280,7 @@ const Navbar = ({ userData, updateUserData }) => {
                                                 <img
                                                     src={user.pfp}
                                                     className="w-8 h-8 object-cover rounded-full mr-3"
+                                                    alt="pfp"
                                                 />
                                                 <span>{user.username}</span>
                                             </div>
@@ -288,6 +307,7 @@ const Navbar = ({ userData, updateUserData }) => {
                         )}
                     </div>
                 </div>
+
             </div>
             {profileOpen && (
                 <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"></div>
@@ -415,11 +435,10 @@ const Navbar = ({ userData, updateUserData }) => {
                     <div onClick={() => setOpen(!open)} className="cursor-pointer relative">
                         <i className="fa-solid fa-bell text-2xl text-[#FEC674]"></i>
                         {unreadCount > 0 && (
-                            <span className="absolute top-3.5 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                {unreadCount}
-                            </span>
+                            <span className="absolute top-3.5 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 h-3 w-3 rounded-full" />
                         )}
                     </div>
+
                     {open && (
                         <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-white shadow-lg rounded-lg p-3 z-50">
                             <h3 className="text-lg font-semibold mb-2">Notifications</h3>
@@ -429,7 +448,8 @@ const Navbar = ({ userData, updateUserData }) => {
                                 notifications.map((notif, index) => (
                                     <div
                                         key={index}
-                                        className={`p-2 border-b cursor-pointer hover:bg-gray-100 flex justify-between items-start ${notif.read ? 'bg-gray-100' : 'bg-yellow-100'}`}
+                                        className={`p-2 border-b cursor-pointer hover:bg-gray-100 flex justify-between items-start ${notif.read ? 'bg-gray-100' : 'bg-yellow-100'
+                                            }`}
                                         onClick={() => markAsRead(index)}
                                     >
                                         <div>
@@ -452,6 +472,7 @@ const Navbar = ({ userData, updateUserData }) => {
                     )}
                 </div>
             </div>
+
         </div>
     );
 };
