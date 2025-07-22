@@ -1,7 +1,7 @@
 # 🧡 UniMeet
 
 A modern productivity and social coordination web application for university students.  
-[Live Demo 🔗](https://unimeet-3ozr.onrender.com)
+[Live Demo 🔗](https://unimeet-lpu.onrender.com)
 
 ---
 
