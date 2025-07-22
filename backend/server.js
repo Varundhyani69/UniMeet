@@ -51,7 +51,7 @@ app.use('/api/timetable', timetableRoutes);
 
 const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendPath));
-app.get('/*', (req, res, next) => {
+app.get('*', (req, res, next) => {
     if (req.originalUrl.startsWith('/api/')) return next();
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
