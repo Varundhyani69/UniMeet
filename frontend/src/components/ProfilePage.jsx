@@ -460,7 +460,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     };
 
     return (
-        <div className="mb-8 font-[Inter]">
+        <div className="mb-15 font-[Inter]">
             <h1 className="text-3xl font-extrabold text-center mb-2 text-gray-800">
                 MY PROFILE
             </h1>
