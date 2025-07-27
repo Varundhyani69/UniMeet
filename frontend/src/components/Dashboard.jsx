@@ -20,9 +20,7 @@ const Dashboard = () => {
         };
         fetchUser();
     }, [])
-    // useEffect(() => {
-    //     console.log("Updated user data:", userData);
-    // }, [userData]);
+
     const [selected, setSelected] = useState("dashboard");
     const [showNavigator, setShowNavigator] = useState(true);
     let lastScrollY = window.scrollY;

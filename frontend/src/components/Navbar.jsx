@@ -143,6 +143,7 @@ const Navbar = ({ userData, updateUserData }) => {
 
         return () => socket.off("friend-request-received");
     }, []);
+
     const fetchNotifications = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/getNotifications`, { withCredentials: true });
@@ -191,7 +192,6 @@ const Navbar = ({ userData, updateUserData }) => {
         socket.emit("setup", userData);
 
         const handleFriendRequestReceived = (newNotification) => {
-            console.log("📥 Received: friend-request-received", newNotification);
             setNotifications(prev => [...prev, newNotification]);
             getPending();
             if (selectedId === newNotification.senderId) {
