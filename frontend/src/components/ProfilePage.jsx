@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 
 const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData }) => {
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+    const [selectedFileType, setSelectedFileType] = useState("excel");
 
     const navigate = useNavigate();
     const timetableFileInputRef = useRef(null);
@@ -50,6 +51,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 bio: initialUserData.bio || '',
                 pfp: initialUserData.pfp || ''
             });
+            console.log(initialUserData.timetable);
             setLocalTimetableData(JSON.parse(JSON.stringify(initialUserData.timetable || {})));
         }
     }, [initialUserData]);
@@ -269,15 +271,16 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
         const formData = new FormData();
         formData.append('timetable', file);
+        formData.append('fileType', selectedFileType || 'excel');
+
 
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/timetable/upload-timetable`,
+            const res = await axios.post(
+                `${import.meta.env.VITE_API_BASE_URL}/api/timetable/upload-timetable`,
                 formData,
                 {
                     withCredentials: true,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
+                    headers: { 'Content-Type': 'multipart/form-data' },
                 }
             );
 
@@ -299,7 +302,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                     };
                 }
 
-                console.log("Structured Timetable from upload:", structuredTimetable);
+                // console.log("Structured Timetable from upload:", structuredTimetable);
                 setLocalTimetableData(structuredTimetable);
 
                 if (setParentUserData) {
@@ -360,7 +363,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             if (res.data.success) {
                 toast.success(res.data.message);
                 setEditMode(false);
-                console.log('Manually updated timetable saved:', res.data.timetable);
+                // console.log('Manually updated timetable saved:', res.data.timetable);
                 if (setParentUserData) {
                     setParentUserData(prev => ({ ...prev, timetable: res.data.timetable }));
                 }
@@ -733,12 +736,16 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             )}
 
             {/* TimeTable Modal */}
+            {/* TimeTable Modal */}
             {timetablePop && (
                 <>
-                    <div className="fixed z-40  inset-0 bg-black/30 backdrop-blur-sm  " onClick={() => setTimetablePop(false)}></div>
+                    <div
+                        className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"
+                        onClick={() => setTimetablePop(false)}
+                    ></div>
 
-                    <div className="z-50 h-110 top-20 fixed inset-0 flex items-center justify-center p-4 ">
-                        <div className="relative w-full max-w-5xl h-140 bg-white/30 backdrop-blur-lg shadow-2xl rounded-2xl p-6 border border-white/40 overflow-hidden">
+                    <div className="z-50 h-130 top-20 fixed inset-0 flex items-center justify-center p-4">
+                        <div className="relative w-full max-w-5xl h-160 bg-white/30 backdrop-blur-lg shadow-2xl rounded-2xl p-6 border border-white/40 overflow-hidden">
                             <h3 className="text-2xl font-bold flex items-center justify-between text-gray-800 mb-6 pb-2 border-b-2 border-gray-200">
                                 <span>Your Timetable</span>
                                 <button
@@ -756,27 +763,49 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             {isTimetableEmpty ? (
                                 <div className="text-center py-10 px-4">
                                     <h2 className="text-xl font-semibold text-gray-700 mb-4">No timetable found.</h2>
-                                    <p className="text-gray-600 mb-6">It looks like you haven't uploaded your timetable yet. Upload a PDF to get started!</p>
+                                    <p className="text-gray-600 mb-6">
+                                        Upload your timetable in <b>Excel (preferred)</b>, PDF, or image format.
+                                    </p>
+
+                                    <select
+                                        value={selectedFileType}
+                                        onChange={(e) => setSelectedFileType(e.target.value)}
+                                        className="p-2 rounded-lg border border-gray-300 shadow"
+                                    >
+                                        <option value="excel">📊 Excel (Preferred)</option>
+                                        <option value="pdf">📄 PDF</option>
+                                    </select>
+
                                     <input
                                         type="file"
-                                        accept="application/pdf"
+                                        accept=".xlsx,.xls,.pdf"
                                         onChange={handleFileUpload}
                                         ref={timetableFileInputRef}
                                         className="hidden"
                                     />
+
                                     <button
                                         onClick={() => timetableFileInputRef.current?.click()}
                                         className="px-8 py-3 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition-all duration-300 cursor-pointer shadow-md"
                                     >
                                         UPLOAD TIMETABLE
                                     </button>
+
                                 </div>
                             ) : (
                                 <>
                                     <div className="flex justify-end gap-4 mb-4">
+                                        <select
+                                            onChange={(e) => setUpdateData(prev => ({ ...prev, fileType: e.target.value }))}
+                                            className="p-2 rounded-lg border border-gray-300 shadow"
+                                        >
+                                            <option value="excel">📊 Excel (Preferred)</option>
+                                            <option value="pdf">📄 PDF</option>
+                                        </select>
+
                                         <input
                                             type="file"
-                                            accept="application/pdf"
+                                            accept=".xlsx,.xls,.pdf/*"
                                             onChange={handleFileUpload}
                                             ref={timetableFileInputRef}
                                             className="hidden"
@@ -797,9 +826,18 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                             }}
                                             className={`px-4 py-2 ${editMode ? 'bg-green-600' : 'bg-purple-600'} text-white font-semibold rounded-md hover:${editMode ? 'bg-green-700' : 'bg-purple-700'} transition-colors duration-200 cursor-pointer shadow-sm`}
                                         >
-                                            {editMode ? (<><i className="fas fa-save mr-2"></i> Done Editing</>) : (<><i className="fas fa-edit mr-2"></i> Edit Timetable</>)}
+                                            {editMode ? (
+                                                <>
+                                                    <i className="fas fa-save mr-2"></i> Done Editing
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-edit mr-2"></i> Edit Timetable
+                                                </>
+                                            )}
                                         </button>
                                     </div>
+
 
                                     <div className="max-h-[65vh] overflow-y-auto overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                                         <h4 className="text-lg font-semibold text-center text-gray-700 mb-4 p-2 bg-white/50 rounded-t-lg">

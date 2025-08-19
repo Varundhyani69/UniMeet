@@ -19,7 +19,9 @@
     "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.1",
     "tabula-js": "^1.0.1",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "tesseract.js": "^6.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

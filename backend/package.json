@@ -14,7 +14,9 @@
     "nodemailer": "^7.0.5",
     "nodemon": "^3.1.10",
     "pdfjs-dist": "^2.16.105",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "tesseract.js": "^6.0.1",
+    "xlsx": "^0.18.5"
   },
   "name": "backend",
   "version": "1.0.0",
