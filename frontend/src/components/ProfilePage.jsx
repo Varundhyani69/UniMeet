@@ -1,11 +1,9 @@
 import axios from "axios";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
-import * as pdfjsLib from 'pdfjs-dist';
 import { toast } from 'react-toastify';
 
 const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData }) => {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
     const [selectedFileType, setSelectedFileType] = useState("excel");
 
     const navigate = useNavigate();
@@ -32,11 +30,8 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
     const [emailOtpSent, setEmailOtpSent] = useState(false);
     const [emailSuccess, setEmailSuccess] = useState(false);
 
-
-
     const [localTimetableData, setLocalTimetableData] = useState({});
     const [editMode, setEditMode] = useState(false);
-
 
     useEffect(() => {
         if (initialUserData) {
@@ -55,7 +50,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             setLocalTimetableData(JSON.parse(JSON.stringify(initialUserData.timetable || {})));
         }
     }, [initialUserData]);
-
 
     const logout = async () => {
         setLoading(true);
@@ -101,13 +95,14 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             }
         } catch (error) {
             toast.error(error.response.data.message);
-            console.log('Profile update error:', err.response?.data || err.message);
+            console.log('Profile update error:', error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
     };
 
     const displayDate = initialUserData.dob ? new Date(initialUserData.dob).toISOString().split('T')[0] : '00-00-00';
+
     const deleteHandler = async () => {
         setLoading(true);
         try {
@@ -119,12 +114,11 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             }
         } catch (error) {
             toast.error(error.response.data.message);
-            console.log('Profile update error:', err.response?.data || err.message);
+            console.log('Profile update error:', error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
     }
-
 
     const sendOtp = async () => {
         setLoading(true);
@@ -139,9 +133,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 setOtpSent(true);
                 setOtpError('');
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            setOtpError(err.response?.data?.message || "Failed to send OTP");
+        } catch (error) {
+            toast.error(error.response.data.message);
+            setOtpError(error.response?.data?.message || "Failed to send OTP");
         } finally {
             setLoading(false);
         }
@@ -160,9 +154,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 setOtpVerified(true);
                 setOtpError('');
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            setOtpError(err.response?.data?.message || "Invalid OTP");
+        } catch (error) {
+            toast.error(error.response.data.message);
+            setOtpError(error.response?.data?.message || "Invalid OTP");
         } finally {
             setLoading(false);
         }
@@ -188,9 +182,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                     setPasswordSuccess(false);
                 }, 2000);
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            setOtpError(err.response?.data?.message || "Failed to change password");
+        } catch (error) {
+            toast.error(error.response.data.message);
+            setOtpError(error.response?.data?.message || "Failed to change password");
         } finally {
             setLoading(false);
         }
@@ -205,9 +199,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 setOtpSent(true);
                 setOtpError('');
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            setOtpError(err.response?.data?.message || "Failed to send OTP");
+        } catch (error) {
+            toast.error(error.response.data.message);
+            setOtpError(error.response?.data?.message || "Failed to send OTP");
         } finally {
             setLoading(false);
         }
@@ -222,9 +216,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 setOtpVerified(true);
                 setOtpError('');
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            setOtpError(err.response?.data?.message || "Invalid OTP");
+        } catch (error) {
+            toast.error(error.response.data.message);
+            setOtpError(error.response?.data?.message || "Invalid OTP");
         } finally {
             setLoading(false);
         }
@@ -238,9 +232,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 toast.success(res.data.message);
                 setEmailOtpSent(true);
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            console.log(err.response?.data || err.message);
+        } catch (error) {
+            toast.error(error.response.data.message);
+            console.log(error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
@@ -255,14 +249,13 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 setEmailSuccess(true);
                 setEmailBox(false);
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            console.log(err.response?.data || err.message);
+        } catch (error) {
+            toast.error(error.response.data.message);
+            console.log(error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
     };
-
 
     const handleFileUpload = async (e) => {
         setLoading(true);
@@ -272,7 +265,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         const formData = new FormData();
         formData.append('timetable', file);
         formData.append('fileType', selectedFileType || 'excel');
-
 
         try {
             const res = await axios.post(
@@ -302,7 +294,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                     };
                 }
 
-                // console.log("Structured Timetable from upload:", structuredTimetable);
                 setLocalTimetableData(structuredTimetable);
 
                 if (setParentUserData) {
@@ -314,14 +305,13 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 console.error("Upload failed with success: false", res.data.message);
             }
 
-        } catch (err) {
-            toast.error(err.response.data.message);
-            console.error("Upload failed:", err.response?.data || err.message);
+        } catch (error) {
+            toast.error(error.response.data.message);
+            console.error("Upload failed:", error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
     };
-
 
     const handleManualTimetableChange = (day, timeSlot, newValue) => {
         const updatedTimetable = JSON.parse(JSON.stringify(localTimetableData));
@@ -333,7 +323,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
         setLocalTimetableData(updatedTimetable);
     };
-
 
     const handleTimetableSubmit = async () => {
         setLoading(true);
@@ -363,21 +352,19 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             if (res.data.success) {
                 toast.success(res.data.message);
                 setEditMode(false);
-                // console.log('Manually updated timetable saved:', res.data.timetable);
                 if (setParentUserData) {
                     setParentUserData(prev => ({ ...prev, timetable: res.data.timetable }));
                 }
             } else {
                 console.log("Manual update failed:", res.data.message);
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            console.log('Manual timetable update error:', err.response?.data || err.message);
+        } catch (error) {
+            toast.error(error.response.data.message);
+            console.log('Manual timetable update error:', error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
     };
-
 
     const { sortedTimeSlots, days, isTimetableEmpty, filteredDays } = useMemo(() => {
         const timetableToProcess = localTimetableData;
@@ -417,6 +404,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
         return { sortedTimeSlots, days, filteredDays, isTimetableEmpty };
     }, [localTimetableData]);
+
     const fileInputRef = useRef(null);
     const [preview, setPreview] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
@@ -432,9 +420,11 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         setPreview(URL.createObjectURL(file));
         setSelectedFile(file);
     };
+
     const handleClose = () => {
         setPreview('');
     }
+
     const uploadPfp = async () => {
         if (!selectedFile) return alert("No file selected");
 
@@ -454,9 +444,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 setPreview('');
                 setSelectedFile(null);
             }
-        } catch (err) {
-            toast.error(err.response.data.message);
-            console.log('Upload error:', err.response?.data || err.message);
+        } catch (error) {
+            toast.error(error.response.data.message);
+            console.log('Upload error:', error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
@@ -543,12 +533,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                     onClick={handleSubmitProfile}
                                     className="px-6 py-2 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition"
                                 >
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Save Changes"
-                                    )}
-
+                                    {loading ? "Loading..." : "Save Changes"}
                                 </button>
                             </div>
                         </div>
@@ -557,7 +542,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             )}
 
             {/* PASSWORD CHANGE */}
-            {passwordBox && <div className="fixed z-40 inset-0  bg-black/30 backdrop-blur-sm"></div>}
+            {passwordBox && <div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>}
             {passwordBox && (
                 <div className="fixed top-1/3 left-1/2 transform -translate-x-1/2 bg-white shadow-xl p-6 rounded-lg z-50 w-96">
                     <h2 className="text-lg font-bold text-[#FEC674] mb-4">Change Password</h2>
@@ -569,11 +554,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 onClick={sendOtp}
                                 className="w-full bg-[#FEC674] text-white font-bold py-2 rounded hover:scale-105 transition"
                             >
-                                {loading ? (
-                                    <span className="loader mr-2"></span>
-                                ) : (
-                                    "Send OTP"
-                                )}
+                                {loading ? "Loading..." : "Send OTP"}
                             </button>
                         </>
                     )}
@@ -592,23 +573,13 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                     onClick={() => setPasswordBox(false)}
                                     className="bg-gray-300 px-4 py-2 rounded"
                                 >
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Cancel"
-                                    )}
-
+                                    Cancel
                                 </button>
                                 <button
                                     onClick={verifyOtp}
                                     className="bg-[#FEC674] text-white font-bold px-4 py-2 rounded"
                                 >
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Verify OTP"
-                                    )}
-
+                                    {loading ? "Loading..." : "Verify OTP"}
                                 </button>
                             </div>
                             {otpError && <p className="text-red-500 text-sm mt-2">{otpError}</p>}
@@ -629,23 +600,13 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                     onClick={() => setPasswordBox(false)}
                                     className="bg-gray-300 px-4 py-2 rounded"
                                 >
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Cancel"
-                                    )}
-
+                                    Cancel
                                 </button>
                                 <button
                                     onClick={changePasswordSubmit}
                                     className="bg-[#FEC674] text-white font-bold px-4 py-2 rounded"
                                 >
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Update Password"
-                                    )}
-
+                                    {loading ? "Loading..." : "Update Password"}
                                 </button>
                             </div>
                             {passwordSuccess && <p className="text-green-600 mt-2">Password changed successfully!</p>}
@@ -655,7 +616,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             )}
 
             {/* EMAIL CHANGE */}
-            {emailBox && <div className="fixed z-40 inset-0  bg-black/30 backdrop-blur-sm"></div>}
+            {emailBox && <div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>}
             {emailBox && (
                 <div className="fixed top-0 left-0 w-full h-full bg-black/50 z-50 flex justify-center items-center">
                     <div className="bg-white p-6 rounded-xl shadow-lg w-96">
@@ -665,11 +626,8 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             <>
                                 <p className="text-sm">Send OTP to your current email to proceed.</p>
                                 <button onClick={sendEmailOtp} className="mt-3 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Send OTP"
-                                    )}</button>
+                                    {loading ? "Loading..." : "Send OTP"}
+                                </button>
                             </>
                         )}
 
@@ -677,11 +635,8 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             <>
                                 <input type="number" placeholder="Enter OTP" className="w-full px-3 py-2 border rounded mt-3" value={otp} onChange={(e) => setOtp(e.target.value)} />
                                 <button onClick={verifyEmailOtp} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Verify OTP"
-                                    )}</button>
+                                    {loading ? "Loading..." : "Verify OTP"}
+                                </button>
                             </>
                         )}
 
@@ -689,11 +644,8 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             <>
                                 <input type="email" placeholder="Enter new email" className="w-full px-3 py-2 border rounded mt-3" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
                                 <button onClick={sendOtpToNewEmail} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Send OTP to new email"
-                                    )}</button>
+                                    {loading ? "Loading..." : "Send OTP to new email"}
+                                </button>
                             </>
                         )}
 
@@ -701,11 +653,8 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             <>
                                 <input type="number" placeholder="Enter OTP from new email" className="w-full px-3 py-2 border rounded mt-3" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} />
                                 <button onClick={verifyNewEmailOtp} className="mt-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold">
-                                    {loading ? (
-                                        <span className="loader mr-2"></span>
-                                    ) : (
-                                        "Verify & Save"
-                                    )}</button>
+                                    {loading ? "Loading..." : "Verify & Save"}
+                                </button>
                             </>
                         )}
 
@@ -714,59 +663,60 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 </div>
             )}
 
-
             {/* Confirmation for Delete */}
             {deleteBox && (<div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>)}
             {deleteBox && (
-
                 <div className="fixed top-50 left-1/2 transform -translate-x-1/2 bg-white shadow-xl p-6 rounded-lg z-50 ">
-
                     <h2 className="text-lg mb-4">Do you really want to delete your account?</h2>
                     <div className="flex gap-4 justify-end">
                         <button onClick={() => setDeleteBox(false)} className="bg-gray-300 px-4 py-1 rounded cursor-pointer transition transform duration-200 hover:scale-105">Cancel</button>
                         <button onClick={deleteHandler} className="bg-red-500 text-white px-4 py-1 rounded cursor-pointer transform hover:scale-105">
-                            {loading ? (
-                                <span className="loader mr-2"></span>
-                            ) : (
-                                "Delete"
-                            )}
+                            {loading ? "Loading..." : "Delete"}
                         </button>
                     </div>
                 </div>
             )}
 
             {/* TimeTable Modal */}
-            {/* TimeTable Modal */}
+            {timetablePop && (<div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>)}
             {timetablePop && (
-                <>
-                    <div
-                        className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"
-                        onClick={() => setTimetablePop(false)}
-                    ></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-4xl w-full overflow-auto relative">
+                        <span onClick={() => setTimetablePop(false)} className="absolute top-2 right-2 text-red-600 cursor-pointer text-2xl">×</span>
+                        {isTimetableEmpty ? (
+                            <div className="text-center py-10 px-4">
+                                <h2 className="text-xl font-semibold text-gray-700 mb-4">No timetable found.</h2>
+                                <p className="text-gray-600 mb-6">
+                                    Upload your timetable in <b>Excel (preferred)</b> or PDF format.
+                                </p>
 
-                    <div className="z-50 h-130 top-20 fixed inset-0 flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-5xl h-160 bg-white/30 backdrop-blur-lg shadow-2xl rounded-2xl p-6 border border-white/40 overflow-hidden">
-                            <h3 className="text-2xl font-bold flex items-center justify-between text-gray-800 mb-6 pb-2 border-b-2 border-gray-200">
-                                <span>Your Timetable</span>
-                                <button
-                                    className="text-rose-600 font-medium text-3xl leading-none hover:text-rose-800 cursor-pointer transition-colors"
-                                    onClick={() => {
-                                        setTimetablePop(false);
-                                        setEditMode(false);
-                                    }}
-                                    aria-label="Close timetable"
+                                <select
+                                    value={selectedFileType}
+                                    onChange={(e) => setSelectedFileType(e.target.value)}
+                                    className="p-2 rounded-lg border border-gray-300 shadow"
                                 >
-                                    &times;
+                                    <option value="excel">📊 Excel (Preferred)</option>
+                                    <option value="pdf">📄 PDF</option>
+                                </select>
+
+                                <input
+                                    type="file"
+                                    accept={selectedFileType === "pdf" ? ".pdf" : ".xlsx,.xls"}
+                                    onChange={handleFileUpload}
+                                    ref={timetableFileInputRef}
+                                    className="hidden"
+                                />
+
+                                <button
+                                    onClick={() => timetableFileInputRef.current?.click()}
+                                    className="px-8 py-3 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition-all duration-300 cursor-pointer shadow-md"
+                                >
+                                    UPLOAD TIMETABLE
                                 </button>
-                            </h3>
-
-                            {isTimetableEmpty ? (
-                                <div className="text-center py-10 px-4">
-                                    <h2 className="text-xl font-semibold text-gray-700 mb-4">No timetable found.</h2>
-                                    <p className="text-gray-600 mb-6">
-                                        Upload your timetable in <b>Excel (preferred)</b>, PDF, or image format.
-                                    </p>
-
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex justify-end gap-4 mb-4">
                                     <select
                                         value={selectedFileType}
                                         onChange={(e) => setSelectedFileType(e.target.value)}
@@ -778,7 +728,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
                                     <input
                                         type="file"
-                                        accept=".xlsx,.xls,.pdf"
+                                        accept={selectedFileType === "pdf" ? ".pdf" : ".xlsx,.xls"}
                                         onChange={handleFileUpload}
                                         ref={timetableFileInputRef}
                                         className="hidden"
@@ -786,132 +736,94 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
                                     <button
                                         onClick={() => timetableFileInputRef.current?.click()}
-                                        className="px-8 py-3 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition-all duration-300 cursor-pointer shadow-md"
+                                        className="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-md cursor-pointer hover:bg-yellow-600 transition-colors duration-200 shadow-sm"
                                     >
-                                        UPLOAD TIMETABLE
+                                        <i className="fas fa-upload mr-2"></i> Reupload Timetable
                                     </button>
 
+                                    <button
+                                        onClick={() => {
+                                            setEditMode(!editMode);
+                                            if (editMode) {
+                                                handleTimetableSubmit();
+                                            }
+                                        }}
+                                        className={`px-4 py-2 text-white font-semibold rounded-md transition-colors duration-200 cursor-pointer shadow-sm ${editMode ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+                                    >
+                                        {editMode ? (
+                                            <>
+                                                <i className="fas fa-save mr-2"></i> Done Editing
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-edit mr-2"></i> Edit Timetable
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
-                            ) : (
-                                <>
-                                    <div className="flex justify-end gap-4 mb-4">
-                                        <select
-                                            onChange={(e) => setUpdateData(prev => ({ ...prev, fileType: e.target.value }))}
-                                            className="p-2 rounded-lg border border-gray-300 shadow"
-                                        >
-                                            <option value="excel">📊 Excel (Preferred)</option>
-                                            <option value="pdf">📄 PDF</option>
-                                        </select>
 
-                                        <input
-                                            type="file"
-                                            accept=".xlsx,.xls,.pdf/*"
-                                            onChange={handleFileUpload}
-                                            ref={timetableFileInputRef}
-                                            className="hidden"
-                                        />
-                                        <button
-                                            onClick={() => timetableFileInputRef.current?.click()}
-                                            className="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-md cursor-pointer hover:bg-yellow-600 transition-colors duration-200 shadow-sm"
-                                        >
-                                            <i className="fas fa-upload mr-2"></i> Reupload Timetable
-                                        </button>
-
-                                        <button
-                                            onClick={() => {
-                                                setEditMode(!editMode);
-                                                if (editMode) {
-                                                    handleTimetableSubmit();
-                                                }
-                                            }}
-                                            className={`px-4 py-2 ${editMode ? 'bg-green-600' : 'bg-purple-600'} text-white font-semibold rounded-md hover:${editMode ? 'bg-green-700' : 'bg-purple-700'} transition-colors duration-200 cursor-pointer shadow-sm`}
-                                        >
-                                            {editMode ? (
-                                                <>
-                                                    <i className="fas fa-save mr-2"></i> Done Editing
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-edit mr-2"></i> Edit Timetable
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-
-
-                                    <div className="max-h-[65vh] overflow-y-auto overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-                                        <h4 className="text-lg font-semibold text-center text-gray-700 mb-4 p-2 bg-white/50 rounded-t-lg">
-                                            Weekly Overview
-                                        </h4>
-                                        <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                                            <thead className="bg-[#FFF3E2] text-gray-800 sticky top-0 z-10">
-                                                <tr>
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider rounded-tl-lg">
-                                                        Time / Day
+                                <div className="max-h-[65vh] overflow-y-auto overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+                                    <h4 className="text-lg font-semibold text-center text-gray-700 mb-4 p-2 bg-white/50 rounded-t-lg">
+                                        Weekly Overview
+                                    </h4>
+                                    <table className="min-w-full divide-y divide-gray-200 table-fixed">
+                                        <thead className="bg-[#FFF3E2] text-gray-800 sticky top-0 z-10">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider rounded-tl-lg">
+                                                    Time / Day
+                                                </th>
+                                                {filteredDays.map((day) => (
+                                                    <th key={day} className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider">
+                                                        {day}
                                                     </th>
-
-                                                    {filteredDays.map((day) => (
-                                                        <th key={day} className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider">
-                                                            {day}
-                                                        </th>
-                                                    ))}
-
-
-                                                    <th className="rounded-tr-lg"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-200 bg-white">
-                                                {sortedTimeSlots.map((timeSlot, index) => (
-                                                    <tr key={timeSlot} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 bg-white/70">
-                                                            {timeSlot}
-                                                        </td>
-                                                        {filteredDays.map((day) => {
-                                                            const currentClass = localTimetableData[day]?.[timeSlot];
-                                                            const isNoClass = currentClass === "No class" || !currentClass;
-
-                                                            return (
-                                                                <td
-                                                                    key={`${day}-${timeSlot}`}
-                                                                    className={`px-2 py-3 text-sm ${isNoClass ? 'text-gray-500 italic' : 'text-gray-800 font-semibold'
-                                                                        } ${isNoClass ? 'bg-gray-100/50' : 'hover:bg-gray-100 transition-colors duration-200'}
-                                                                    ${editMode ? 'border border-dashed border-gray-400' : ''}`}
-                                                                >
-                                                                    {editMode ? (
-                                                                        <input
-                                                                            type="text"
-                                                                            value={isNoClass ? '' : currentClass}
-                                                                            onChange={(e) => handleManualTimetableChange(day, timeSlot, e.target.value)}
-                                                                            className="w-full bg-transparent text-center focus:outline-none border-b border-gray-300"
-                                                                            placeholder="Add Class"
-                                                                        />
-                                                                    ) : (
-                                                                        isNoClass ? '' : currentClass
-                                                                    )}
-                                                                </td>
-                                                            );
-                                                        })}
-                                                    </tr>
                                                 ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </>
-                            )}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                            {sortedTimeSlots.map((timeSlot, index) => (
+                                                <tr key={timeSlot} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 bg-white/70">
+                                                        {timeSlot}
+                                                    </td>
+                                                    {filteredDays.map((day) => {
+                                                        const currentClass = localTimetableData[day]?.[timeSlot] || 'No class';
+                                                        const isNoClass = currentClass === "No class";
 
-                        </div>
+                                                        return (
+                                                            <td
+                                                                key={`${day}-${timeSlot}`}
+                                                                className={`px-2 py-3 text-sm ${isNoClass ? 'text-gray-500 italic' : 'text-gray-800 font-semibold'} ${isNoClass ? 'bg-gray-100/50' : 'hover:bg-gray-100 transition-colors duration-200'} ${editMode ? 'border border-dashed border-gray-400' : ''}`}
+                                                            >
+                                                                {editMode ? (
+                                                                    <input
+                                                                        type="text"
+                                                                        value={isNoClass ? '' : currentClass}
+                                                                        onChange={(e) => handleManualTimetableChange(day, timeSlot, e.target.value)}
+                                                                        className="w-full bg-transparent text-center focus:outline-none border-b border-gray-300"
+                                                                        placeholder="Add Class"
+                                                                    />
+                                                                ) : (
+                                                                    currentClass
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
                     </div>
-                </>
+                </div>
             )}
 
             {/* MAIN PROFILE LAYOUT */}
-            {
-                preview && (<div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>)
-            }
+            {preview && (<div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>)}
             {preview && (
-                <div className="fixed inset-0 z-40 flex  items-center justify-center">
+                <div className="fixed inset-0 z-40 flex items-center justify-center">
                     <div className="w-[90vw] max-w-md bg-white rounded-2xl p-5 shadow-2xl">
-
                         {/* Close Button */}
                         <div className="flex justify-end">
                             <button onClick={handleClose}>
@@ -956,12 +868,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 onClick={uploadPfp}
                                 className="bg-[#FEC674] px-6 py-2 rounded-xl shadow-md hover:scale-105 transition"
                             >
-                                {loading ? (
-                                    <span className="loader mr-2"></span>
-                                ) : (
-                                    "Save"
-                                )}
-
+                                {loading ? "Loading..." : "Save"}
                             </button>
                         </div>
                     </div>
@@ -990,9 +897,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         className="bg-[#FEC674] absolute h-10 w-10 right-18 bottom-78 rounded-full hover:scale-105 transition duration-200"
                     ><i className="fa-solid text-xl fa-camera"></i></button>
 
-
-
-
                     <h2 className="mt-5 text-xl font-bold text-gray-700">{initialUserData.username}</h2>
                     <p className="text-sm text-gray-500">Friends: <b>{initialUserData?.friends?.length || 0}</b></p>
 
@@ -1005,12 +909,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 className="text-red-600 font-bold cursor-pointer hover:underline"
                                 onClick={() => setDeleteBox(true)}
                             >
-                                {loading ? (
-                                    <span className="loader mr-2"></span>
-                                ) : (
-                                    "Delete Account"
-                                )}
-
+                                Delete Account
                             </li>
                         </ul>
 
@@ -1018,12 +917,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             className="w-full mt-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition font-semibold cursor-pointer transform hover:scale-105 duration-200"
                             onClick={logout}
                         >
-                            {loading ? (
-                                <span className="loader mr-2"></span>
-                            ) : (
-                                "Logout"
-                            )}
-
+                            {loading ? "Loading..." : "Logout"}
                         </button>
                     </div>
                 </div>
@@ -1050,11 +944,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             onClick={() => setEditPop(true)}
                             className="w-full md:w-auto px-6 py-2 bg-[#FEC674] text-white font-bold rounded-full hover:scale-105 transition cursor-pointer"
                         >
-                            {loading ? (
-                                <span className="loader mr-2"></span>
-                            ) : (
-                                "Edit Profile"
-                            )}
+                            {loading ? "Loading..." : "Edit Profile"}
                         </button>
                         <button
                             onClick={() => {
@@ -1069,7 +959,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

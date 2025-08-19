@@ -1,3 +1,4 @@
+// timetableRoutes.js (fully updated)
 import express from "express";
 import multer from "multer";
 import XLSX from "xlsx";
@@ -36,22 +37,30 @@ function emptyTimetable() {
 function normalizeTimeSlot(raw) {
     if (!raw) return null;
 
-    // remove trailing ":" and whitespace
-    raw = raw.replace(/:$/, "").trim();
+    // Remove trailing ":" and any extra whitespace or newlines
+    raw = raw.replace(/:$/, "").replace(/\n/g, "").trim();
 
-    // Example: "09:00 - 10:00" → "09-10 AM"
-    const match = raw.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/);
-    if (!match) return raw;
+    // Match formats like "09:00 - 10:00" or "15:00 - 16:00"
+    const match = raw.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+    if (!match) return null;  // Invalid time, skip
 
-    let start = parseInt(match[1], 10);
-    let end = parseInt(match[2], 10);
-    let suffix = start < 12 ? "AM" : "PM";
+    let startHour = parseInt(match[1], 10);
+    let startMinute = parseInt(match[2], 10);
+    let endHour = parseInt(match[3], 10);
+    let endMinute = parseInt(match[4], 10);
 
-    // convert 24h to 12h
-    if (start > 12) start -= 12;
-    if (end > 12) end -= 12;
+    // Assume AM/PM based on 24h (common in schedules)
+    let suffix = startHour < 12 ? "AM" : "PM";
+    if (startHour > 12) startHour -= 12;
+    if (endHour > 12) endHour -= 12;
+    if (startHour === 0) startHour = 12;  // Handle midnight/noon if needed
+    if (endHour === 0) endHour = 12;
 
-    return `${start.toString().padStart(2, "0")}-${end.toString().padStart(2, "0")} ${suffix}`;
+    // If minutes are 00, format as HH-HH (no minutes)
+    const startStr = startMinute === 0 ? startHour.toString().padStart(2, "0") : `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+    const endStr = endMinute === 0 ? endHour.toString().padStart(2, "0") : `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+
+    return `${startStr}-${endStr} ${suffix}`;
 }
 
 function parseExcel(filePath) {
@@ -60,17 +69,33 @@ function parseExcel(filePath) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-    // Days are on 3rd row
-    const headers = data[2];
+    // Days are on row index 2 (0-based)
+    const headers = data[2] || [];
 
     for (let r = 3; r < data.length; r++) {
-        const row = data[r];
-        const timeSlot = normalizeTimeSlot(row[0]);  // normalize slot format
+        const row = data[r] || [];
+        for (let c = 0; c < row.length; c++) {
+            const cell = (row[c] || "").trim();
+            if (!cell) continue;
 
-        for (let c = 1; c < row.length; c++) {
             const day = headers[c];
-            const subject = row[c] || "No class";
-            if (day && timetable[day] && timeSlot) {
+            if (!day || !timetable[day]) continue;
+
+            // Split cell into lines (time on first, subject on second)
+            const lines = cell.split("\n").map(line => line.trim());
+            if (lines.length < 2) continue;
+
+            const rawTime = lines[0];
+            let subject = lines[1] || "No class";
+
+            // Extract only course code for consistency with PDF (e.g., "PSY291")
+            const courseMatch = subject.match(/([A-Z]{3}\d{3})/);
+            if (courseMatch) {
+                subject = courseMatch[1];
+            }
+
+            const timeSlot = normalizeTimeSlot(rawTime);
+            if (timeSlot) {
                 timetable[day][timeSlot] = subject;
             }
         }
