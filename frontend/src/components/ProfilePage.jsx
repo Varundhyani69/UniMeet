@@ -1,37 +1,38 @@
+
 import axios from "axios";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { io } from 'socket.io-client';
+const socket = io(import.meta.env.VITE_API_BASE_URL);
 
 const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData }) => {
     const [selectedFileType, setSelectedFileType] = useState("excel");
-
     const navigate = useNavigate();
     const timetableFileInputRef = useRef(null);
-
     const [updateData, setUpdateData] = useState({});
     const [loading, setLoading] = useState(false);
-
     const [editPop, setEditPop] = useState(false);
     const [deleteBox, setDeleteBox] = useState(false);
     const [passwordBox, setPasswordBox] = useState(false);
     const [emailBox, setEmailBox] = useState(false);
     const [timetablePop, setTimetablePop] = useState(false);
-
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [otpVerified, setOtpVerified] = useState(false);
     const [otpError, setOtpError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState(false);
-
     const [newEmail, setNewEmail] = useState('');
     const [emailOtp, setEmailOtp] = useState('');
     const [emailOtpSent, setEmailOtpSent] = useState(false);
     const [emailSuccess, setEmailSuccess] = useState(false);
-
     const [localTimetableData, setLocalTimetableData] = useState({});
     const [editMode, setEditMode] = useState(false);
+    const [friendsPop, setFriendsPop] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
+    const [friendData, setFriendData] = useState({});
+    const [friendTimetablePop, setFriendTimetablePop] = useState(false);
 
     useEffect(() => {
         if (initialUserData) {
@@ -46,7 +47,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 bio: initialUserData.bio || '',
                 pfp: initialUserData.pfp || ''
             });
-            console.log(initialUserData.timetable);
             setLocalTimetableData(JSON.parse(JSON.stringify(initialUserData.timetable || {})));
         }
     }, [initialUserData]);
@@ -110,15 +110,14 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             if (res.status === 200) {
                 toast.success(res.data.message);
                 navigate('/');
-                console.log("Account deleted");
             }
         } catch (error) {
             toast.error(error.response.data.message);
-            console.log('Profile update error:', error.response?.data || error.message);
+            console.log('Profile delete error:', error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     const sendOtp = async () => {
         setLoading(true);
@@ -185,40 +184,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         } catch (error) {
             toast.error(error.response.data.message);
             setOtpError(error.response?.data?.message || "Failed to change password");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const sendEmailOtp = async () => {
-        setLoading(true);
-        try {
-            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendChangePasswordOtp`, {}, { withCredentials: true });
-            if (res.status === 200) {
-                toast.success(res.data.message);
-                setOtpSent(true);
-                setOtpError('');
-            }
-        } catch (error) {
-            toast.error(error.response.data.message);
-            setOtpError(error.response?.data?.message || "Failed to send OTP");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const verifyEmailOtp = async () => {
-        setLoading(true);
-        try {
-            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/verifyChangePasswordOtp`, { otp }, { withCredentials: true });
-            if (res.status === 200) {
-                toast.success(res.data.message);
-                setOtpVerified(true);
-                setOtpError('');
-            }
-        } catch (error) {
-            toast.error(error.response.data.message);
-            setOtpError(error.response?.data?.message || "Invalid OTP");
         } finally {
             setLoading(false);
         }
@@ -301,10 +266,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 }
 
                 setEditMode(false);
-            } else {
-                console.error("Upload failed with success: false", res.data.message);
             }
-
         } catch (error) {
             toast.error(error.response.data.message);
             console.error("Upload failed:", error.response?.data || error.message);
@@ -355,8 +317,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 if (setParentUserData) {
                     setParentUserData(prev => ({ ...prev, timetable: res.data.timetable }));
                 }
-            } else {
-                console.log("Manual update failed:", res.data.message);
             }
         } catch (error) {
             toast.error(error.response.data.message);
@@ -366,6 +326,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         }
     };
 
+    // User timetable processing
     const { sortedTimeSlots, days, isTimetableEmpty, filteredDays } = useMemo(() => {
         const timetableToProcess = localTimetableData;
 
@@ -405,6 +366,51 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         return { sortedTimeSlots, days, filteredDays, isTimetableEmpty };
     }, [localTimetableData]);
 
+    // Friend timetable processing
+    const friendTimetableData = useMemo(() => {
+        if (!friendData?.timetable) return {};
+        return JSON.parse(JSON.stringify(friendData.timetable || {}));
+    }, [friendData]);
+
+    const { friendSortedTimeSlots, friendDays, isFriendTimetableEmpty, friendFilteredDays } = useMemo(() => {
+        const timetableToProcess = friendTimetableData || {};
+
+        const allTimeSlots = new Set();
+        for (const day in timetableToProcess) {
+            for (const timeSlot in timetableToProcess[day]) {
+                allTimeSlots.add(timeSlot);
+            }
+        }
+
+        const sortedTimeSlots = Array.from(allTimeSlots).sort((a, b) => {
+            const parseTime = (timeStr) => {
+                const parts = timeStr.split(' ')[0].split('-');
+                const [startHourStr, startMinuteStr] = parts[0].split(':');
+                let startHour = parseInt(startHourStr, 10);
+                const startMinute = parseInt(startMinuteStr, 10) || 0;
+                const period = timeStr.includes('AM') ? 'AM' : 'PM';
+
+                if (period === 'PM' && startHour !== 12) startHour += 12;
+                if (period === 'AM' && startHour === 12) startHour = 0;
+
+                return startHour * 60 + startMinute;
+            };
+            return parseTime(a) - parseTime(b);
+        });
+
+        const days = Object.keys(timetableToProcess).sort((a, b) => {
+            const order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+            return order.indexOf(a) - order.indexOf(b);
+        });
+
+        const filteredDays = days.filter(day => day !== "Sunday");
+
+        const isTimetableEmpty = Object.keys(timetableToProcess).length === 0 ||
+            Object.values(timetableToProcess).every(day => Object.keys(day).length === 0);
+
+        return { friendSortedTimeSlots: sortedTimeSlots, friendDays: days, friendFilteredDays: filteredDays, isFriendTimetableEmpty: isTimetableEmpty };
+    }, [friendTimetableData]);
+
     const fileInputRef = useRef(null);
     const [preview, setPreview] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
@@ -423,16 +429,16 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
 
     const handleClose = () => {
         setPreview('');
-    }
+    };
 
     const uploadPfp = async () => {
-        if (!selectedFile) return alert("No file selected");
+        if (!selectedFile) return toast.error("No file selected");
 
         const formData = new FormData();
         formData.append("pfp", selectedFile);
         setLoading(true);
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/uploadPfp`, formData, {
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL} /api/user/uploadPfp`, formData, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -443,6 +449,9 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 toast.success(res.data.message);
                 setPreview('');
                 setSelectedFile(null);
+                if (setParentUserData) {
+                    setParentUserData(prev => ({ ...prev, pfp: res.data.pfp }));
+                }
             }
         } catch (error) {
             toast.error(error.response.data.message);
@@ -452,11 +461,195 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         }
     };
 
+    const handleFriendClick = async (friend) => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/${friend._id}/getFriendDetails`, {
+                withCredentials: true
+            });
+            if (res.status === 200) {
+                setSelectedId(friend._id);
+                setFriendData(res.data.friendData);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to load friend profile");
+            console.log('Friend profile fetch error:', error.response?.data || error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+
+
+
+
     return (
         <div className="mb-15 font-[Inter]">
             <h1 className="text-3xl font-extrabold text-center mb-2 text-gray-800">
                 MY PROFILE
             </h1>
+
+            {/* Friends List Popup */}
+            {friendsPop && (
+                <>
+                    <div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                        <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-[#FEC674]">Friends List</h3>
+                                <button onClick={() => setFriendsPop(false)} className="text-red-600 text-2xl hover:scale-105 transition">
+                                    ×
+                                </button>
+                            </div>
+                            {initialUserData?.friends?.length > 0 ? (
+                                <div className="space-y-4">
+                                    {initialUserData.friends.map(friend => (
+                                        <div
+                                            key={friend._id}
+                                            onClick={() => handleFriendClick(friend)}
+                                            className="flex items-center space-x-4 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition"
+                                        >
+                                            <img
+                                                src={friend.pfp || "/default-avatar.png"}
+                                                alt={friend.username}
+                                                className="w-12 h-12 rounded-full object-cover shadow-md"
+                                            />
+                                            <span className="text-gray-800 font-semibold">{friend.username}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-600 text-center">No friends yet.</p>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Friend Profile Popup */}
+            {selectedId && friendData._id && (
+                <>
+                    <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"></div>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+                        <div className="relative w-120 max-w-3xl bg-[#FEC674] rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                            <div
+                                onClick={() => {
+                                    setSelectedId(null);
+                                    setFriendData({});
+                                }}
+                                className="absolute top-4 right-4 text-2xl text-red-600 cursor-pointer"
+                            >
+                                ×
+                            </div>
+                            <div className="w-full flex justify-center pt-8">
+                                <img
+                                    src={friendData.pfp || "/default-avatar.png"}
+                                    className="h-40 w-40 rounded-full object-cover shadow-2xl"
+                                    alt="Profile"
+                                />
+                            </div>
+                            <div className="w-full">
+                                <div className="bg-[#FFF3E2] mt-4">
+                                    <h1 className="text-center text-black text-2xl font-keania">@{friendData.username}</h1>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-6 text-gray-700 text-sm font-inter">
+                                    <div className="md:col-span-2">
+                                        <b>Bio:</b> <i>{friendData.bio || 'No bio'}</i>
+                                    </div>
+                                    <div><b>Course:</b> {friendData.course || 'N/A'}</div>
+                                    <div><b>Reg No:</b> {friendData.reg_no || 'N/A'}</div>
+                                    <div><b>Section:</b> {friendData.section || 'N/A'}</div>
+                                    <div><b>Age:</b> {friendData.age || 'N/A'}</div>
+                                    <div><b>Gender:</b> {friendData.gender || 'N/A'}</div>
+                                    <div>
+                                        <b>Birthday:</b>{' '}
+                                        {friendData.dob ? new Date(friendData.dob).toLocaleDateString('en-GB', {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                        }) : 'N/A'}
+                                    </div>
+                                    <div><b>Email:</b> {friendData.email || 'N/A'}</div>
+                                </div>
+                                <div className="flex items-center justify-end pr-5 pb-6 space-x-3">
+                                    <button
+                                        onClick={() => setFriendTimetablePop(true)}
+                                        className="text-white bg-blue-600 hover:scale-105 transition transform px-5 py-1 rounded-xl shadow-xl cursor-pointer"
+                                        disabled={loading}
+                                    >
+                                        {loading ? <span className="loader mr-2"></span> : "View Timetable"}
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Friend Timetable Modal */}
+            {friendTimetablePop && friendData._id && (
+                <>
+                    <div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                        <div className="bg-white p-8 rounded-lg shadow-xl max-w-4xl w-full overflow-auto relative">
+                            <span onClick={() => setFriendTimetablePop(false)} className="absolute top-2 right-2 text-red-600 cursor-pointer text-2xl">×</span>
+                            {isFriendTimetableEmpty ? (
+                                <div className="text-center py-10 px-4">
+                                    <h2 className="text-xl font-semibold text-gray-700 mb-4">{friendData.username} has no timetable.</h2>
+                                    <p className="text-gray-600">No timetable data available for this user.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <h4 className="text-lg font-semibold text-center text-gray-700 mb-4 p-2 bg-white/50 rounded-t-lg">
+                                        {friendData.username}'s Weekly Overview
+                                    </h4>
+                                    <div className="max-h-[65vh] overflow-y-auto overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+                                        <table className="min-w-full divide-y divide-gray-200 table-fixed">
+                                            <thead className="bg-[#FFF3E2] text-gray-800 sticky top-0 z-10">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider rounded-tl-lg">
+                                                        Time / Day
+                                                    </th>
+                                                    {friendFilteredDays.map((day) => (
+                                                        <th key={day} className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider">
+                                                            {day}
+                                                        </th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200 bg-white">
+                                                {friendSortedTimeSlots.map((timeSlot, index) => (
+                                                    <tr key={timeSlot} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 bg-white/70">
+                                                            {timeSlot}
+                                                        </td>
+                                                        {friendFilteredDays.map((day) => {
+                                                            const currentClass = friendTimetableData[day]?.[timeSlot] || 'No class';
+                                                            const isNoClass = currentClass === "No class";
+
+                                                            return (
+                                                                <td
+                                                                    key={`${day}-${timeSlot}`}
+                                                                    className={`px-2 py-3 text-sm ${isNoClass ? 'text-gray-500 italic' : 'text-gray-800 font-semibold'} ${isNoClass ? 'bg-gray-100/50' : 'hover:bg-gray-100 transition-colors duration-200'}`}
+                                                                >
+                                                                    {currentClass}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Edit Pop Up */}
             {editPop && (
@@ -625,7 +818,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         {!otpSent && !otpVerified && (
                             <>
                                 <p className="text-sm">Send OTP to your current email to proceed.</p>
-                                <button onClick={sendEmailOtp} className="mt-3 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
+                                <button onClick={sendOtp} className="mt-3 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
                                     {loading ? "Loading..." : "Send OTP"}
                                 </button>
                             </>
@@ -634,7 +827,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         {otpSent && !otpVerified && (
                             <>
                                 <input type="number" placeholder="Enter OTP" className="w-full px-3 py-2 border rounded mt-3" value={otp} onChange={(e) => setOtp(e.target.value)} />
-                                <button onClick={verifyEmailOtp} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
+                                <button onClick={verifyOtp} className="mt-2 bg-yellow-400 text-white px-4 py-2 rounded-full font-bold">
                                     {loading ? "Loading..." : "Verify OTP"}
                                 </button>
                             </>
@@ -666,7 +859,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             {/* Confirmation for Delete */}
             {deleteBox && (<div className="fixed z-40 inset-0 bg-black/30 backdrop-blur-sm"></div>)}
             {deleteBox && (
-                <div className="fixed top-50 left-1/2 transform -translate-x-1/2 bg-white shadow-xl p-6 rounded-lg z-50 ">
+                <div className="fixed top-50 left-1/2 transform -translate-x-1/2 bg-white shadow-xl p-6 rounded-lg z-50">
                     <h2 className="text-lg mb-4">Do you really want to delete your account?</h2>
                     <div className="flex gap-4 justify-end">
                         <button onClick={() => setDeleteBox(false)} className="bg-gray-300 px-4 py-1 rounded cursor-pointer transition transform duration-200 hover:scale-105">Cancel</button>
@@ -824,14 +1017,11 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
             {preview && (
                 <div className="fixed inset-0 z-40 flex items-center justify-center">
                     <div className="w-[90vw] max-w-md bg-white rounded-2xl p-5 shadow-2xl">
-                        {/* Close Button */}
                         <div className="flex justify-end">
                             <button onClick={handleClose}>
                                 <p className="text-red-600 text-2xl hover:scale-105 transition">×</p>
                             </button>
                         </div>
-
-                        {/* Profile Image Preview */}
                         <div className="flex justify-center mt-2 mb-4 relative">
                             {preview ? (
                                 <img
@@ -844,8 +1034,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                     No Image
                                 </div>
                             )}
-
-                            {/* Camera Icon Button */}
                             <button
                                 onClick={handleClick}
                                 className="absolute bottom-0 right-[30%] bg-[#FEC674] p-2 rounded-full shadow hover:scale-105 transition"
@@ -853,16 +1041,15 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 <i className="fa-solid fa-camera text-lg"></i>
                             </button>
                         </div>
-
-                        {/* User Info */}
                         <div className="text-center mb-4">
                             <h2 className="text-xl font-semibold text-gray-800">{initialUserData.username}</h2>
-                            <p className="text-sm text-gray-500">
+                            <p
+                                className="text-sm text-gray-500 cursor-pointer hover:underline"
+                                onClick={() => setFriendsPop(true)}
+                            >
                                 Friends: <b>{initialUserData?.friends?.length || 0}</b>
                             </p>
                         </div>
-
-                        {/* Save Button */}
                         <div className="flex justify-end">
                             <button
                                 onClick={uploadPfp}
@@ -875,7 +1062,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                 </div>
             )}
             <div className="flex flex-col lg:flex-row gap-10 items-start justify-center w-full max-w-6xl mx-auto">
-                {/* LEFT CARD */}
                 <div className="w-full z-1 lg:w-1/3 bg-white/30 backdrop-blur-lg shadow-xl rounded- p-6 flex flex-col items-center">
                     <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-lg">
                         <img
@@ -891,20 +1077,24 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         onChange={handleFileChange}
                         style={{ display: 'none' }}
                     />
-
                     <button
                         onClick={handleClick}
                         className="bg-[#FEC674] absolute h-10 w-10 right-18 bottom-78 rounded-full hover:scale-105 transition duration-200"
-                    ><i className="fa-solid text-xl fa-camera"></i></button>
-
+                    >
+                        <i className="fa-solid text-xl fa-camera"></i>
+                    </button>
                     <h2 className="mt-5 text-xl font-bold text-gray-700">{initialUserData.username}</h2>
-                    <p className="text-sm text-gray-500">Friends: <b>{initialUserData?.friends?.length || 0}</b></p>
-
+                    <p
+                        className="text-sm text-gray-500 cursor-pointer hover:underline"
+                        onClick={() => setFriendsPop(true)}
+                    >
+                        Friends: <b>{initialUserData?.friends?.length || 0}</b>
+                    </p>
                     <div className="w-full mt-8">
                         <h3 className="font-bold text-gray-700 mb-3">⚙️ Settings</h3>
                         <ul className="space-y-2 text-sm text-gray-600">
-                            <li className="cursor-pointer hover:text-black" onClick={() => setEmailBox(!emailBox)} >Change Email</li>
-                            <li className="cursor-pointer hover:text-black" onClick={() => setPasswordBox(!passwordBox)} >Change Password</li>
+                            <li className="cursor-pointer hover:text-black" onClick={() => setEmailBox(!emailBox)}>Change Email</li>
+                            <li className="cursor-pointer hover:text-black" onClick={() => setPasswordBox(!passwordBox)}>Change Password</li>
                             <li
                                 className="text-red-600 font-bold cursor-pointer hover:underline"
                                 onClick={() => setDeleteBox(true)}
@@ -912,7 +1102,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                                 Delete Account
                             </li>
                         </ul>
-
                         <button
                             className="w-full mt-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition font-semibold cursor-pointer transform hover:scale-105 duration-200"
                             onClick={logout}
@@ -921,8 +1110,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         </button>
                     </div>
                 </div>
-
-                {/* RIGHT CARD */}
                 <div className="w-full lg:w-2/3 bg-white/30 backdrop-blur-lg shadow-xl rounded-2xl p-6 border border-white/40">
                     <h3 className="text-xl font-bold text-[#FEC674] mb-6 border-b pb-2">
                         Personal Information
@@ -938,7 +1125,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                         <div><b>Email:</b> {initialUserData.email}</div>
                         <div className="md:col-span-2"><b>Bio:</b> <i>{initialUserData.bio}</i></div>
                     </div>
-
                     <div className="mt-8 flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-3">
                         <button
                             onClick={() => setEditPop(true)}
@@ -956,7 +1142,6 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
                             View/Edit Timetable
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>
