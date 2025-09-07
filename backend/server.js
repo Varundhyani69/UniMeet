@@ -11,6 +11,7 @@ import userRoute from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import timetableRoutes from "./routes/timetableRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import cookieParser from "cookie-parser";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +29,8 @@ const io = new Server(server, {
         credentials: true,
     },
 });
+
+io.setMaxListeners(20);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("DB connected"))
@@ -55,6 +58,7 @@ app.use('/api/user', userRoute);
 app.use('/api/message', messageRoutes);
 app.use('/api/timetable', timetableRoutes);
 app.use('/api/meeting', meetingRoutes);
+app.use('/api/admin', adminRoutes);
 
 const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendPath));

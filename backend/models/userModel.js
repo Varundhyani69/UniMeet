@@ -1,4 +1,3 @@
-// userModel.js
 import mongoose from "mongoose";
 
 const userModel = new mongoose.Schema({
@@ -40,7 +39,9 @@ const userModel = new mongoose.Schema({
                 default: false
             }
         }
-    ]
+    ],
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    status: { type: String, enum: ['active', 'banned'], default: 'active' }
 }, { timestamps: true });
 
 const User = mongoose.model('User', userModel);
