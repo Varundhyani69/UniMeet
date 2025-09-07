@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -11,7 +10,7 @@ import { Server } from "socket.io";
 import userRoute from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import timetableRoutes from "./routes/timetableRoutes.js";
-import meetingRoutes from "./routes/meetingRoutes.js"; // Added
+import meetingRoutes from "./routes/meetingRoutes.js";
 import cookieParser from "cookie-parser";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -34,7 +33,6 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("DB connected"))
     .catch((err) => console.log("DB connection error:", err));
 
-// Middleware to attach io to req
 app.use((req, res, next) => {
     req.io = io;
     next();
@@ -56,7 +54,7 @@ app.use(cors({
 app.use('/api/user', userRoute);
 app.use('/api/message', messageRoutes);
 app.use('/api/timetable', timetableRoutes);
-app.use('/api/meeting', meetingRoutes); // Added
+app.use('/api/meeting', meetingRoutes);
 
 const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendPath));

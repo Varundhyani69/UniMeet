@@ -1,4 +1,3 @@
-// meetingController.js
 import Meeting from "../models/meetingModel.js";
 import User from "../models/userModel.js";
 
