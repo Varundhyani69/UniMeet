@@ -1,3 +1,4 @@
+// userModel.js
 import mongoose from "mongoose";
 
 const userModel = new mongoose.Schema({
@@ -25,6 +26,11 @@ const userModel = new mongoose.Schema({
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'User'
             },
+            meetingId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Meeting',
+                default: null
+            },
             timestamp: {
                 type: Date,
                 default: Date.now
@@ -35,7 +41,7 @@ const userModel = new mongoose.Schema({
             }
         }
     ]
-}, { timestamps: true })
+}, { timestamps: true });
 
 const User = mongoose.model('User', userModel);
 
