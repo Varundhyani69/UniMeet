@@ -74,12 +74,6 @@ const Home = ({ userData }) => {
                 <Header userData={userData} />
             </div>
             <div className="mb-4">
-                <Timetable userData={userData} />
-            </div>
-            <div className="mb-4">
-                <Friends userData={userData} />
-            </div>
-            <div className="mb-4">
                 <Meetings
                     meetings={meetings}
                     userData={userData}
@@ -95,6 +89,12 @@ const Home = ({ userData }) => {
                 userData={userData}
                 onMeetingCreated={handleMeetingCreated}
             />
+            <div className="mb-4">
+                <Friends userData={userData} />
+            </div>
+            <div className="mb-4">
+                <Timetable userData={userData} />
+            </div>
             {selectedMeeting && (
                 <MeetingDetails
                     isOpen={!!selectedMeeting}

@@ -63,7 +63,7 @@ const Meetings = ({
     };
 
     return (
-        <div className="ml-2 mb-10 px-6">
+        <div className="ml-2 mb-10">
             {/* Heading */}
             <div className="flex items-center justify-between mb-8">
                 <h1
@@ -98,13 +98,13 @@ const Meetings = ({
                     )}
             </div>
 
-            {/* Meeting Popup */}
+            {/* Meeting Popup
             <MeetingPopup
                 isOpen={false}
                 setIsOpen={() => { }}
                 userData={userData}
                 onMeetingCreated={handleMeetingCreated}
-            />
+            /> */}
         </div>
     );
 };
