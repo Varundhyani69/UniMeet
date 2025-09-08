@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
     const [friends, setFriends] = useState([]);
@@ -11,6 +12,27 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [error, setError] = useState('');
+
+    // cooldown state
+    const [cooldown, setCooldown] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(0);
+
+    useEffect(() => {
+        let timer;
+        if (cooldown && timeLeft > 0) {
+            timer = setInterval(() => {
+                setTimeLeft((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        setCooldown(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [cooldown, timeLeft]);
 
     useEffect(() => {
         const fetchFriends = async () => {
@@ -39,6 +61,11 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
     };
 
     const handleSubmit = async () => {
+        if (cooldown) {
+            toast.error("Please wait before creating another meeting!");
+            return;
+        }
+
         try {
             if (!selectedFriends.length || !location || !date || !startTime || !endTime) {
                 setError('Please fill all required fields');
@@ -63,9 +90,13 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                 setStartTime('');
                 setEndTime('');
                 setError('');
+
+                // trigger cooldown with countdown
+                setCooldown(true);
+                setTimeLeft(10);
             }
         } catch (err) {
-            setError('Error creating meeting');
+            setError(err.response?.data?.message || 'Error creating meeting');
             console.error("Create meeting error:", err);
         }
     };
@@ -85,6 +116,7 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                 <h2 className="text-base font-semibold mb-2">Create Meeting</h2>
                 {error && <p className="text-red-500 mb-2">{error}</p>}
 
+                {/* Title */}
                 <div className="mb-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Title (Optional)</label>
                     <input
@@ -96,6 +128,7 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                     />
                 </div>
 
+                {/* Friends */}
                 <div className="mb-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Select Friends</label>
                     <select
@@ -133,6 +166,7 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                     </div>
                 </div>
 
+                {/* Location */}
                 <div className="mb-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Location</label>
                     <input
@@ -144,6 +178,7 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                     />
                 </div>
 
+                {/* Date */}
                 <div className="mb-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Date</label>
                     <input
@@ -154,6 +189,7 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                     />
                 </div>
 
+                {/* Time */}
                 <div className="flex gap-2 mb-2">
                     <div className="flex-1">
                         <label className="block text-xs font-medium text-gray-700 mb-1">Start</label>
@@ -175,6 +211,7 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                     </div>
                 </div>
 
+                {/* Description */}
                 <div className="mb-3">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Description (Optional)</label>
                     <textarea
@@ -186,6 +223,7 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                     />
                 </div>
 
+                {/* Buttons */}
                 <div className="flex justify-end gap-2">
                     <button
                         onClick={() => setIsOpen(false)}
@@ -195,9 +233,11 @@ const MeetingPopup = ({ isOpen, setIsOpen, userData, onMeetingCreated }) => {
                     </button>
                     <button
                         onClick={handleSubmit}
-                        className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors duration-200"
+                        disabled={cooldown}
+                        className={`px-3 py-1 rounded-lg text-sm transition-colors duration-200 ${cooldown ? "bg-gray-400 cursor-not-allowed text-white" : "bg-blue-500 text-white hover:bg-blue-600"
+                            }`}
                     >
-                        Create
+                        {cooldown ? `Wait (${timeLeft}s)` : "Create"}
                     </button>
                 </div>
             </div>

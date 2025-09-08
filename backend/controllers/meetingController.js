@@ -1,7 +1,8 @@
 import Meeting from "../models/meetingModel.js";
 import User from "../models/userModel.js";
 
-// Helper to compute expiresAt from date and timeSlot
+const lastCreated = {};
+
 const computeExpiresAt = (date, timeSlot) => {
     const [start, end] = timeSlot.split(' - ');
     const endTime = end.trim();
@@ -23,6 +24,13 @@ export const createMeeting = async (req, res) => {
         if (!friends || friends.length === 0 || !location || !date || !timeSlot) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
+
+        // cooldown check
+        const now = Date.now();
+        if (lastCreated[creatorId] && now - lastCreated[creatorId] < 10000) {
+            return res.status(429).json({ success: false, message: "Please wait 10 seconds before creating another meeting." });
+        }
+        lastCreated[creatorId] = now;
 
         const expiresAt = computeExpiresAt(date, timeSlot);
 
