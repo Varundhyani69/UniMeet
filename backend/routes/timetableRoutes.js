@@ -6,6 +6,13 @@ import pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
 import fs from "fs";
 import User from "../models/userModel.js";
 import isAuthenticated from "../middleware/isAuthenticated.js";
+// Keep only clean subject code like INT222, PEV301, PSY291, PEAS05, IXD801
+function cleanSubject(subject) {
+    if (!subject || subject === "No class") return "No class";
+
+    const match = subject.match(/[A-Z]{3,}[0-9]{2,}/i);
+    return match ? match[0].toUpperCase() : subject.trim();
+}
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -89,10 +96,7 @@ function parseExcel(filePath) {
             let subject = lines[1] || "No class";
 
             // Extract only course code for consistency with PDF (e.g., "PSY291")
-            const courseMatch = subject.match(/([A-Z]{3}\d{3})/);
-            if (courseMatch) {
-                subject = courseMatch[1];
-            }
+            subject = cleanSubject(subject);
 
             const timeSlot = normalizeTimeSlot(rawTime);
             if (timeSlot) {
@@ -140,7 +144,7 @@ async function parsePDF(filePath) {
     for (let item of items) {
         const match = item.text.match(/C:([A-Z]{2,5}\d{3})/);
         if (match) {
-            const course = match[1];
+            const course = cleanSubject(match[1]);
 
             const closestTimeY = Object.keys(timeSlots).reduce((prev, curr) =>
                 Math.abs(curr - item.y) < Math.abs(prev - item.y) ? curr : prev
@@ -152,7 +156,7 @@ async function parsePDF(filePath) {
 
             const time = timeSlots[closestTimeY];
             if (time && closestDay) {
-                timetable[closestDay][time] = course;
+                timetable[closestDay][time] = cleanSubject(course);
             }
         }
     }
