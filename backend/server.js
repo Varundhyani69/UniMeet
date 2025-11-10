@@ -20,7 +20,11 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
-const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'];
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map(s => s.trim());
+
+app.set("trust proxy", 1);
 
 const server = createServer(app);
 const io = new Server(server, {
