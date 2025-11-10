@@ -1,6 +1,48 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+const SLOT_ORDER = [
+    "09-10 AM", "10-11 AM", "11-12 AM", "12-01 PM",
+    "01-02 PM", "02-03 PM", "03-04 PM", "04-05 PM", "05-06 PM"
+];
+
+const getToday = () => new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+const parseHour = (slot) => {
+    const [range, meridian] = slot.split(" ");
+    const [start] = range.split("-");
+    let hour = parseInt(start);
+    if (meridian === "PM" && hour !== 12) hour += 12;
+    if (meridian === "AM" && hour === 12) hour = 0;
+    return hour; // ✅ REAL hour (0–23)
+};
+
+const getCurrentSlot = () => {
+    const hour = new Date().getHours(); // REAL current hour in 24h
+    return SLOT_ORDER.find(slot => {
+        const slotHour = parseHour(slot);
+        return hour >= slotHour && hour < slotHour + 1;
+    }) || null;
+};
+
+
+const getTodayClasses = (timetable) => {
+    const today = getToday();
+    return timetable?.[today] || {};
+};
+
+const getFirstAndLastClass = (daySlots) => {
+    const classSlots = SLOT_ORDER.filter(s => daySlots[s] && daySlots[s] !== "No class");
+
+    if (classSlots.length === 0) return { first: null, last: null };
+
+    return {
+        first: classSlots[0],
+        last: classSlots[classSlots.length - 1]
+    };
+};
+
+
 
 const Friends = ({ userData }) => {
     const [friendData, setFriendData] = useState([]);
@@ -28,14 +70,6 @@ const Friends = ({ userData }) => {
         }
     };
 
-    const parseHour = (slot) => {
-        const [range, meridian] = slot.split(" ");
-        const [start] = range.split("-");
-        let hour = parseInt(start);
-        if (meridian === "PM" && hour !== 12) hour += 12;
-        if (meridian === "AM" && hour === 12) hour = 0;
-        return hour;
-    };
 
     const getFreeBlocks = (timetable) => {
         const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
@@ -78,28 +112,69 @@ const Friends = ({ userData }) => {
 
     useEffect(() => {
         if (!userData?.timetable) return;
-        const myBlocks = getFreeBlocks(userData.timetable);
 
-        const matched = friendData
-            .map(friend => {
-                const theirBlocks = getFreeBlocks(friend.timetable);
-                const chilling = getChillingStatus(myBlocks, theirBlocks);
+        const todaySlots = getTodayClasses(userData.timetable);
+        const { first, last } = getFirstAndLastClass(todaySlots);
+        const nowHour = new Date().getHours();
+        const currentSlot = getCurrentSlot();
 
-                const overlaps = [];
-                myBlocks.forEach(a =>
-                    theirBlocks.forEach(b => {
-                        const common = a.filter(x => b.includes(x));
-                        if (common.length) overlaps.push(common);
-                    })
-                );
+        // ✅ STEP 1 - Process all friends once
+        const friendsProcessed = friendData.map(friend => {
+            const fToday = getTodayClasses(friend.timetable);
+            const friendFreeNow = currentSlot && fToday[currentSlot] === "No class";
 
-                return { ...friend, overlaps, chilling };
-            })
-            .filter(f => f.overlaps.length > 0 || f.chilling)
-            .sort((a, b) => (b.overlaps[0]?.length || 0) - (a.overlaps[0]?.length || 0));
+            return {
+                ...friend,
+                freeNow: friendFreeNow,
+                freeSlots: Object.entries(fToday)
+                    .filter(([_, sub]) => sub === "No class")
+                    .map(([slot]) => slot)
+            };
+        });
 
-        setAvailableFriends(matched);
+        let available = [];
+
+        // ✅ BEFORE FIRST CLASS
+        if (first && nowHour < parseHour(first)) {
+            available = friendsProcessed.map(f => ({
+                ...f,
+                status: "Chilling (Before Classes)"
+            }));
+        }
+
+        // ✅ AFTER LAST CLASS
+        else if (last && nowHour >= parseHour(last) + 1) {
+            available = friendsProcessed.map(f => ({
+                ...f,
+                status: "Chilling (After Classes)"
+            }));
+        }
+
+        // ✅ DURING CLASS HOURS
+        else {
+            const freeNow = friendsProcessed.filter(f => f.freeNow);
+            freeNow.forEach(a => a.status = "Available Now");
+
+            if (freeNow.length > 0) {
+                available = freeNow;
+            } else {
+                const nextFree = friendsProcessed
+                    .map(f => ({
+                        ...f,
+                        upcoming: f.freeSlots.find(slot => parseHour(slot) > nowHour)
+                    }))
+                    .filter(f => f.upcoming)
+                    .sort((a, b) => parseHour(a.upcoming) - parseHour(b.upcoming));
+
+                nextFree.forEach(a => a.status = `Free at ${a.upcoming}`);
+                available = nextFree;
+            }
+        }
+
+        setAvailableFriends(available);
+
     }, [friendData, userData]);
+
 
     const sendReminder = async (id) => {
         setLoading(true);
@@ -132,26 +207,34 @@ const Friends = ({ userData }) => {
             </h1>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {availableFriends.length > 0 ? availableFriends.map((f, i) => {
-                    const label = f.chilling ? f.chilling : f.overlaps[0].join(" → ");
+                {availableFriends.length > 0 ? availableFriends.map((f, i) => (
+                    <div
+                        key={i}
+                        className="w-full h-60 px-4 py-2 rounded-xl bg-[#FEC674] flex flex-col items-center justify-center gap-2 text-center shadow cursor-pointer"
+                        onClick={() => (setSelectedFriend(f), setFriendTimetablePop(true))}
+                    >
+                        <img src={f.pfp} className="h-20 w-20 rounded-full object-cover shadow-xl" />
+                        <h4 className="font-semibold">{f.username}</h4>
 
-                    return (
-                        <div key={i} className="w-full h-60 px-4 py-2 rounded-xl bg-[#FEC674] flex flex-col items-center justify-center gap-2 text-center shadow cursor-pointer"
-                            onClick={() => (setSelectedFriend(f), setFriendTimetablePop(true))}>
-                            <img src={f.pfp} className="h-20 w-20 rounded-full object-cover shadow-xl" />
-                            <h4 className="font-semibold">{f.username}</h4>
-                            <h4 className="font-bold text-white text-sm">{label}</h4>
-                            <h4 className="flex items-center gap-2 text-white font-bold">
-                                Available <div className="h-2 w-2 rounded-full bg-green-300"></div>
-                            </h4>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); sendReminder(f._id); }}
-                                className="bg-[#FFF3E2] p-2 rounded-xl hover:bg-[#fff3e27f] transition">
-                                Send Reminder
-                            </button>
-                        </div>
-                    );
-                }) : (
+                        {/* NEW STATUS LABEL */}
+                        <h4 className="font-bold text-white text-sm">{f.status}</h4>
+
+                        {/* ✅ Only show green dot if Available Now */}
+                        <h4 className="flex items-center gap-2 text-white font-bold">
+                            {f.status === "Available Now" && (
+                                <div className="h-2 w-2 rounded-full bg-green-300"></div>
+                            )}
+                        </h4>
+
+                        <button
+                            onClick={(e) => { e.stopPropagation(); sendReminder(f._id); }}
+                            className="bg-[#FFF3E2] p-2 rounded-xl hover:bg-[#fff3e27f] transition"
+                        >
+                            Send Reminder
+                        </button>
+                    </div>
+                )) : (
+
                     <p className="text-gray-500 col-span-full text-center">No matching availability today.</p>
                 )}
             </div>

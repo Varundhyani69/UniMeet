@@ -438,7 +438,7 @@ const ProfilePage = ({ userData: initialUserData, setUserData: setParentUserData
         formData.append("pfp", selectedFile);
         setLoading(true);
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL} /api/user/uploadPfp`, formData, {
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/uploadPfp`, formData, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'multipart/form-data'

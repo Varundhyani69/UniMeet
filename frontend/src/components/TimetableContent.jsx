@@ -1,32 +1,24 @@
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+
 const TimetableContent = ({ userData }) => {
     const timetable = userData.timetable || {};
 
-    // ✅ Only show days that actually have at least one real class
     const days = Object.keys(timetable).filter(day =>
         Object.values(timetable[day]).some(subject => subject && subject !== "No class")
     );
 
-    // ✅ Auto-select today's day if valid, else fallback
     const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
-    const defaultDay =
-        today !== "Sunday" && days.includes(today)
-            ? today
-            : days[0] || null;
+    const computeDefaultDay = () => {
+        if (today !== "Sunday" && days.includes(today)) return today;
+        return days[0] || null;
+    };
 
-    const [selectedDay, setSelectedDay] = useState(null);
+    const [selectedDay, setSelectedDay] = useState(computeDefaultDay);
+
     useEffect(() => {
-        if (days.length === 0) return;
-
-        const defaultDay =
-            today !== "Sunday" && days.includes(today)
-                ? today
-                : days[0];
-
-        setSelectedDay(defaultDay);
-    }, [days]);
+        setSelectedDay(computeDefaultDay());
+    }, [userData.timetable]);
 
     if (!selectedDay) return null;
 
@@ -34,7 +26,6 @@ const TimetableContent = ({ userData }) => {
 
     return (
         <div className="p-4">
-            {/* Day Selector */}
             {days.length > 0 && (
                 <div className="p-4 overflow-x-auto scrollbar-hide">
                     <div className="flex gap-4 mb-6 sm:grid sm:grid-cols-6">
@@ -52,7 +43,6 @@ const TimetableContent = ({ userData }) => {
                 </div>
             )}
 
-            {/* Class Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Object.entries(periods)
                     .filter(([_, subject]) => subject && subject !== "No class")
@@ -74,4 +64,3 @@ const TimetableContent = ({ userData }) => {
 };
 
 export default TimetableContent;
-
