@@ -4,7 +4,8 @@ import Navigator from './Navigator';
 import ProfilePage from './ProfilePage';
 import { useEffect, useState } from 'react';
 import ChatPage from './ChatPage';
-import axios from 'axios';
+import axios from "../axios.js";
+
 const Dashboard = () => {
     const [userData, setUserData] = useState({});
     useEffect(() => {

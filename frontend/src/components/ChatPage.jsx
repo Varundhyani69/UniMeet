@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "../axios.js";
 import React, { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 

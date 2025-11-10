@@ -5,7 +5,7 @@ import Friends from './Friends';
 import MeetingPopup from './MeetingPopup';
 import MeetingDetails from './MeetingDetails';
 import Meetings from './Meetings';
-import axios from 'axios';
+import axios from "../axios.js";
 import { io } from 'socket.io-client';
 
 const Home = ({ userData }) => {

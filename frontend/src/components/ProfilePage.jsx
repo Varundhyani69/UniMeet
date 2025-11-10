@@ -1,5 +1,6 @@
 
-import axios from "axios";
+import axios from "../axios.js";
+
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';

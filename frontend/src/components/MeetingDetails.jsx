@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../axios.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, Clock, MapPin, User, Users, Trash2 } from "lucide-react";
 

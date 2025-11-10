@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import axios from "../axios.js";
+
 import { toast } from 'react-toastify';
 import "../App.css";
 import { io } from 'socket.io-client';
