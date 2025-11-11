@@ -6,6 +6,33 @@ const SLOT_ORDER = [
     "09-10 AM", "10-11 AM", "11-12 AM", "12-01 PM",
     "01-02 PM", "02-03 PM", "03-04 PM", "04-05 PM", "05-06 PM"
 ];
+const formatHour = (slot) => {
+    const [range, meridian] = slot.split(" "); // "11-12", "AM"
+    let hour = parseInt(range.split("-")[0]); // 11
+
+    // Convert to 24h base
+    if (meridian === "PM" && hour !== 12) hour += 12;
+    if (meridian === "AM" && hour === 12) hour = 0;
+
+    // Convert back to pretty 12h
+    const displayHour = ((hour + 11) % 12) + 1;
+    const displayMeridian = hour >= 12 ? "PM" : "AM";
+
+    return `${displayHour} ${displayMeridian}`;
+};
+
+const formatHourEnd = (slot) => {
+    const [range, meridian] = slot.split(" "); // "12-01", "PM"
+    let hour = parseInt(range.split("-")[1]); // second part of the range
+
+    if (meridian === "PM" && hour !== 12) hour += 12;
+    if (meridian === "AM" && hour === 12) hour = 0;
+
+    const displayHour = ((hour + 11) % 12) + 1;
+    const displayMeridian = hour >= 12 ? "PM" : "AM";
+
+    return `${displayHour} ${displayMeridian}`;
+};
 
 const getToday = () => new Date().toLocaleDateString("en-US", { weekday: "long" });
 
@@ -110,71 +137,90 @@ const Friends = ({ userData }) => {
         if (max < 17) return "Chilling (After 5 PM)";
         return null;
     };
-
     useEffect(() => {
-        if (!userData?.timetable) return;
+        if (!friendData.length) return;
 
-        const todaySlots = getTodayClasses(userData.timetable);
-        const { first, last } = getFirstAndLastClass(todaySlots);
         const nowHour = new Date().getHours();
-        const currentSlot = getCurrentSlot();
 
-        // ✅ STEP 1 - Process all friends once
-        const friendsProcessed = friendData.map(friend => {
-            const fToday = getTodayClasses(friend.timetable);
-            const friendFreeNow = currentSlot && fToday[currentSlot] === "No class";
+        const processed = friendData.map(friend => {
+            const today = getTodayClasses(friend.timetable);
+            const { first, last } = getFirstAndLastClass(today);
 
-            return {
-                ...friend,
-                freeNow: friendFreeNow,
-                freeSlots: Object.entries(fToday)
-                    .filter(([_, sub]) => sub === "No class")
-                    .map(([slot]) => slot)
-            };
-        });
+            const freeBlocks = getFreeBlocks(friend.timetable);
 
-        let available = [];
-
-        // ✅ BEFORE FIRST CLASS
-        if (first && nowHour < parseHour(first)) {
-            available = friendsProcessed.map(f => ({
-                ...f,
-                status: "Chilling (Before Classes)"
-            }));
-        }
-
-        // ✅ AFTER LAST CLASS
-        else if (last && nowHour >= parseHour(last) + 1) {
-            available = friendsProcessed.map(f => ({
-                ...f,
-                status: "Chilling (After Classes)"
-            }));
-        }
-
-        // ✅ DURING CLASS HOURS
-        else {
-            const freeNow = friendsProcessed.filter(f => f.freeNow);
-            freeNow.forEach(a => a.status = "Available Now");
-
-            if (freeNow.length > 0) {
-                available = freeNow;
-            } else {
-                const nextFree = friendsProcessed
-                    .map(f => ({
-                        ...f,
-                        upcoming: f.freeSlots.find(slot => parseHour(slot) > nowHour)
-                    }))
-                    .filter(f => f.upcoming)
-                    .sort((a, b) => parseHour(a.upcoming) - parseHour(b.upcoming));
-
-                nextFree.forEach(a => a.status = `Free at ${a.upcoming}`);
-                available = nextFree;
+            // ✅ No classes today
+            if (!first && !last) {
+                return { ...friend, status: "Free all day", dot: "green", priority: 3 };
             }
-        }
 
-        setAvailableFriends(available);
+            // ✅ Before first class
+            if (nowHour < parseHour(first)) {
+                return {
+                    ...friend,
+                    status: `Chilling before ${formatHour(first)}`,
+                    dot: "green",
+                    priority: 2
+                };
+            }
 
-    }, [friendData, userData]);
+            // ✅ After last class
+            if (nowHour >= parseHour(last) + 1) {
+                return {
+                    ...friend,
+                    status: "Free now (classes over)",
+                    dot: "green",
+                    priority: 1
+                };
+            }
+
+            // ✅ Free right now → combine continuous free block fully
+            const currentBlock = freeBlocks.find(block =>
+                block.some(slot => parseHour(slot) === nowHour)
+            );
+
+            if (currentBlock) {
+                const startSlot = currentBlock[0];
+                const endSlot = currentBlock[currentBlock.length - 1];
+
+                return {
+                    ...friend,
+                    status: `Free ${formatHour(startSlot)} to ${formatHourEnd(endSlot)}`,
+                    dot: "green",
+                    priority: 0
+                };
+            }
+
+            // ✅ Free later today
+            const upcomingBlock = freeBlocks.find(block =>
+                parseHour(block[0]) > nowHour
+            );
+
+            if (upcomingBlock) {
+                return {
+                    ...friend,
+                    status: `Free at ${formatHour(upcomingBlock[0])}`,
+                    dot: "yellow",
+                    upcomingStart: upcomingBlock[0],
+                    priority: 4
+                };
+            }
+
+            // ❌ Busy rest of day — hide
+            return null;
+        })
+            .filter(Boolean)
+            .sort((a, b) => {
+                if (a.priority !== b.priority) return a.priority - b.priority;
+                if (a.upcomingStart && b.upcomingStart)
+                    return parseHour(a.upcomingStart) - parseHour(b.upcomingStart);
+                return 0;
+            });
+
+        setAvailableFriends(processed);
+    }, [friendData]);
+
+
+
 
 
     const sendReminder = async (id) => {
@@ -222,9 +268,10 @@ const Friends = ({ userData }) => {
 
                         {/* ✅ Only show green dot if Available Now */}
                         <h4 className="flex items-center gap-2 text-white font-bold">
-                            {f.status === "Available Now" && (
-                                <div className="h-2 w-2 rounded-full bg-green-300"></div>
-                            )}
+                            {f.dot === "green" && <div className="h-2 w-2 rounded-full bg-green-300"></div>}
+                            {f.dot === "yellow" && <div className="h-2 w-2 rounded-full bg-yellow-300"></div>}
+
+
                         </h4>
 
                         <button
