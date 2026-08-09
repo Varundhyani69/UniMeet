@@ -64,6 +64,9 @@ app.use('/api/timetable', timetableRoutes);
 app.use('/api/meeting', meetingRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Health check endpoint for self-ping
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
 const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendPath));
 app.get('*', (req, res, next) => {
@@ -121,4 +124,17 @@ io.on("connection", (socket) => {
 
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+
+    // Keep Render free tier alive by self-pinging every 14 minutes
+    const BACKEND_URL = process.env.BACKEND_URL;
+    if (BACKEND_URL) {
+        setInterval(async () => {
+            try {
+                await fetch(`${BACKEND_URL}/health`);
+                console.log("Self-ping sent to keep server alive");
+            } catch (err) {
+                console.error("Self-ping failed:", err.message);
+            }
+        }, 14 * 60 * 1000); // 14 minutes
+    }
 });
