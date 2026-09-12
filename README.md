@@ -160,3 +160,10 @@ MIT
 ## 👨‍💻 Author
 
 Built with ❤️ for university students
+
+---
+
+## 🔗 Links
+
+- [Live Application](https://unimeet-lpu.onrender.com)
+- [GitHub Repository](https://github.com/Varundhyani69/UniMeet)
