@@ -60,6 +60,7 @@ This project uses **GitHub Actions** for automated testing and deployment:
 ### Continuous Integration (CI)
 - Runs on every push and pull request to `main`
 - Lints backend and frontend code
+- **Runs automated tests** (22 backend tests + 14 frontend tests)
 - Builds frontend to catch compilation errors early
 - Ensures code quality before merging
 
@@ -148,6 +149,45 @@ VITE_API_URL=http://localhost:8080
 - `tailwindcss` - Styling
 - `framer-motion` - Animations
 - `lucide-react` - Icons
+
+---
+
+## 🧪 Testing
+
+This project includes automated tests to ensure code quality and reliability.
+
+### Backend Tests (Jest)
+- **22 tests** covering:
+  - Health endpoint validation
+  - JWT token generation and verification
+  - Password hashing with bcrypt
+  - Timetable parsing logic (subject code cleaning, empty timetable structure)
+
+**Run tests:**
+```bash
+cd backend
+npm test                # Run all tests
+npm run test:watch      # Run in watch mode
+npm run test:coverage   # Generate coverage report
+```
+
+### Frontend Tests (Vitest)
+- **14 tests** covering:
+  - Authentication utils (localStorage, token management)
+  - Email validation (LPU domain checking)
+  - Timetable utilities (time slot validation, course code format)
+  - Free slot matching algorithm
+
+**Run tests:**
+```bash
+cd frontend
+npm test                # Run all tests
+npm run test:watch      # Run in watch mode
+npm run test:coverage   # Generate coverage report
+```
+
+### CI Integration
+All tests run automatically on every push/PR via GitHub Actions, ensuring no broken code reaches production.
 
 ---
 

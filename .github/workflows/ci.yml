@@ -35,9 +35,17 @@ jobs:
         working-directory: ./backend
         run: npm run lint --if-present
       
+      - name: Test backend
+        working-directory: ./backend
+        run: npm test
+      
       - name: Lint frontend
         working-directory: ./frontend
         run: npm run lint
+      
+      - name: Test frontend
+        working-directory: ./frontend
+        run: npm test
       
       - name: Build frontend
         working-directory: ./frontend
